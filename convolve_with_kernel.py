@@ -1,8 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+"""
+Makes a ground hypothesis, assuming all cells fire uncorrelated and with a rate equal to m
+:param m: Matrix to infer firing rate fram
+:returns: A ground truth firing matrix
+"""
 def make_ground_hypothesis(m):
+    # Infer inter-spike time interval iti
     itis = []
     for i in m.T:
         spikes = i[np.logical_not(np.isnan(i))]
@@ -11,6 +16,7 @@ def make_ground_hypothesis(m):
     gram = sorted(itis) - min(itis)
     lambda_hat = 1/np.mean(gram) # Maximum likelihood estimator of exponential distribution is 1/lambda as per Wiki
 
+    # Generate ground hypothesis based on lambda_hat
     firing_times = []
     for i in m.T:
         max_t = np.nanmax(i)
@@ -24,7 +30,14 @@ def make_ground_hypothesis(m):
         firing_matrix[i, :len(el)] = el
     return(firing_matrix.T)
 
-def convolve_with_kernel(m, kernel_steepness=0.020, c='b'):
+"""
+Convolve with a Epanechnikov kernel
+:param m: Raw input spikes in a square matrix, padded with np.nans
+:param kernel_steepness: Parameter of kernel width
+:returns: A tuple containing per peak ([peak_area[0], ...], [peak_amplitudes], [peak_onset_time], [peak_end_time])
+"""
+def convolve_with_kernel(m, kernel_steepness=0.020):
+    # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
     u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
     kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
     t_axis = np.arange(0, np.ceil(np.nanmax(m)), 0.001)
@@ -38,6 +51,7 @@ def convolve_with_kernel(m, kernel_steepness=0.020, c='b'):
         y[i, :] = np.convolve(y[i, :], kernel, mode='same')
     z = np.sum(y, axis=0)
 
+    # Indentify peaks as regions of z such that all values are above zero, ending when a zero is reached
     peaks = [[]]
     indices_peak_starts = []
     indices_peak_ends = []
@@ -53,11 +67,12 @@ def convolve_with_kernel(m, kernel_steepness=0.020, c='b'):
     if len(peaks[-1]) == 0:
         peaks = peaks[:-1]
 
+    # Obtaining returns
     peak_areas = [0.001*sum(i) for i in peaks]
     times_peak_starts = [0.001*(i-1) for i in indices_peak_starts]
     times_peak_ends = [0.001*(i-1) for i in indices_peak_ends]
     peak_amplitudes = [np.max(i) for i in peaks]
-    plt.hist(peak_amplitudes, alpha=0.5)
+    return peak_areas, peak_amplitudes, times_peak_starts, times_peak_ends
 
 m = np.loadtxt('/home/romano/mep/TemporalHyperaccuity/hyperaccuity_output/150421-Bl01_package.csv', delimiter=',')
 mprime = make_ground_hypothesis(m)
