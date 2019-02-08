@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def make_ground_hypothesis(m):
     itis = []
     for i in m.T:
@@ -8,7 +9,7 @@ def make_ground_hypothesis(m):
         iti = spikes[1:] - spikes[:-1]
         itis.extend(iti)
     gram = sorted(itis) - min(itis)
-    lambda_hat = 1/np.mean(gram) # Maximum likelihood estimator of exponential distribution is 1/lambda
+    lambda_hat = 1/np.mean(gram) # Maximum likelihood estimator of exponential distribution is 1/lambda as per Wiki
 
     firing_times = []
     for i in m.T:
