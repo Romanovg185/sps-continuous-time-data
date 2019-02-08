@@ -74,10 +74,38 @@ def convolve_with_kernel(m, kernel_steepness=0.020):
     peak_amplitudes = [np.max(i) for i in peaks]
     return peak_areas, peak_amplitudes, times_peak_starts, times_peak_ends
 
-m = np.loadtxt('/home/romano/mep/TemporalHyperaccuity/hyperaccuity_output/150421-Bl01_package.csv', delimiter=',')
-mprime = make_ground_hypothesis(m)
-convolve_with_kernel(m, c='C0')
-convolve_with_kernel(mprime, c='C1')
-plt.xlabel('Maximum fluorescence [Fluorescence]')
-plt.ylabel('Occurences')
-plt.show()
+"""
+Determine minimum area width to be considered an SP as the area that only appears randomly under H0 with a p=0.05
+:param m_ground: Ground truth matrix
+:returns: Float that contains the minimum peak area for it to be considered a spike
+"""
+def find_minimum_peak_area(m_ground):
+    areas, amplitudes, onset_times, end_times = convolve_with_kernel(m_ground)
+    sorted_areas = np.sort(areas)
+    min_area = sorted_areas[round(0.95*len(sorted_areas))]
+    return min_area
+
+"""
+Find indices of significant regions of firing pattern
+:param m_sample: Matrix of sample
+:returns: List of tuples of (begin, end) forall significant peaks
+"""
+def get_indices_significant_overlap(m_sample):
+    n_samples = 20 # Number of samples of ground truth
+    l = list(map(find_minimum_peak_area, [make_ground_hypothesis(m_sample) for i in range(n_samples)]))
+    minimum_peak_area = sum(l)/len(l)
+    areas, amplitudes, starts, ends = convolve_with_kernel(m_sample)
+    left_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, starts))))
+    left_edges = [i[1] for i in left_edges]
+    right_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, ends))))
+    right_edges = [i[1] for i in right_edges]
+    indices = list(zip(left_edges, right_edges))
+    indices = [(int(1000*i), int(1000*j)) for i, j in indices]
+    return indices
+
+def main():
+    m_sample = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/150421-Bl01_package.csv', delimiter=',')
+    ind = get_indices_significant_overlap(m_sample)
+
+if __name__ == "__main__":
+    main()
