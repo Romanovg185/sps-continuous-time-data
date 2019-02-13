@@ -31,6 +31,77 @@ def make_ground_hypothesis(m):
     return(firing_matrix.T)
 
 """
+Generate a ground hypothesis, assuming cortical data consisting of a summation of sparse spikes and firing plateaus
+:param m: Matrix to infer from
+param width: Time width of a group to consider it a plateau
+:returns: A ground truth firing matrix
+"""
+def make_cortical_ground_hypothesis(m, width):
+    min_number_for_plateau = 2
+    lam_sparse = 0
+    lam_plateau = 0
+    n_plateau = 0
+    singleton_distances = []
+    plateau_distances = []
+    plateau_n = []
+    plateau_spikes = []
+    for cell in m.T:
+        cell = cell[np.logical_not(np.isnan(cell))]
+        groupings = [[0.0]]
+        for spike in cell:
+            if abs(spike - groupings[-1][-1]) < width:
+                groupings[-1].append(spike)
+            else:
+                groupings.append([spike])
+        singletons = [i for i in groupings if len(i) == min_number_for_plateau]
+        singleton_distance = [abs(i[0] - j[0]) for i, j in zip(singletons[1:], singletons[:-1])]
+        plateaus = [i for i in groupings if len(i) > min_number_for_plateau]
+        plateau_distance = list(map(lambda x: abs(x[0][0] - x[1][0]), zip(plateaus[1:], plateaus[:-1])))
+        plateau_number = [len(i) for i in plateaus]
+        l = []
+        for plat in plateaus:
+            l.extend([abs(i - j) for i, j in zip(plat[1:], plat[:-1])])
+        singleton_distances.extend(singleton_distance)
+        plateau_distances.extend(plateau_distance)
+        plateau_n.extend(plateau_number)
+        plateau_spikes.extend(l)
+
+    d_singleton_hat = sum(singleton_distances)/len(singleton_distances)
+    d_plateau_hat = np.median(plateau_distances)
+    n_peaks_in_plateau_hat = np.median(plateau_n)
+    print(d_plateau_hat)
+    d_plateau_spikes_hat = sum(plateau_spikes)/len(plateau_spikes)
+
+    # Sparse spikes
+    m_singleton = []
+    for i in range(m.shape[1]):
+        singleton_spikes = np.cumsum(np.random.exponential(d_singleton_hat, size=1000))
+        singleton_spikes = singleton_spikes[singleton_spikes < np.nanmax(m[i, :])] # Not larger than original time series
+        m_singleton.append(singleton_spikes)
+
+    # Plateaus
+    m_plat = []
+    for i in range(m.shape[1]):
+        plateau_start_times = np.cumsum(np.random.exponential(d_plateau_hat, size=1000))
+        plateau_start_times = plateau_start_times[plateau_start_times < np.nanmax(m[i,:])]
+        plateau_spikes = [np.cumsum(np.random.exponential(d_plateau_spikes_hat, size=i.astype(int))) for i in np.random.exponential(d_plateau_hat, size=plateau_start_times.size)]
+        plateau_final = [i + j for i, j in zip(plateau_start_times, plateau_spikes)]
+        plateau_final = np.hstack(plateau_final)
+        m_plat.append(plateau_final)
+
+    # Combining
+    m_tot = [sorted(np.hstack([i, j])) for i, j in zip(m_singleton, m_plat)]
+    l_tot = max([len(i) for i in m_tot])
+    final = np.full((m.shape[1], l_tot), np.nan)
+    for i, el in enumerate(m_tot):
+        final[i, :len(el)] = el
+    for i, el in enumerate(final):
+        plt.scatter(el, i*np.ones_like(el), c='C0')
+    plt.ylabel('Cell number')
+    plt.xlabel('Time [sec]')
+
+
+"""
 Convolve with a Epanechnikov kernel
 :param m: Raw input spikes in a square matrix, padded with np.nans
 :param kernel_steepness: Parameter of kernel width
@@ -82,7 +153,7 @@ Determine minimum area width to be considered an SP as the area that only appear
 def find_minimum_peak_area(m_ground):
     areas, amplitudes, onset_times, end_times = convolve_with_kernel(m_ground)
     sorted_areas = np.sort(areas)
-    min_area = sorted_areas[round(0.95*len(sorted_areas))]
+    min_area = sorted_areas[np.floor(0.95*len(sorted_areas)).astype(int)]
     return min_area
 
 """
@@ -103,9 +174,55 @@ def get_indices_significant_overlap(m_sample):
     indices = [(int(1000*i), int(1000*j)) for i, j in indices]
     return indices
 
-def main():
-    m_sample = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/150421-Bl01_package.csv', delimiter=',')
+"""
+Obtain all neurons that possibly could be part of the pattern
+:param m: Matrix containing onset times in continuous time
+:returns: Matrix of concatenated synchronous patterns
+"""
+def locate_indices_neuron_per_pattern(m):
     ind = get_indices_significant_overlap(m_sample)
+    patterns = []
+    for start, end in ind:
+        single_pattern = []
+        for i, cell in enumerate(m_sample.T):
+            right_of_start = cell > start/1000
+            left_of_end = cell < end/1000
+            if np.any(np.logical_and(left_of_end, right_of_start)):
+                single_pattern.append(i)
+        patterns.append(tuple(single_pattern))
+    z = np.zeros((len(ind), m_sample.shape[1])) #z[event, cell_partaking]
+    for i, cells in enumerate(patterns):
+        z[i, cells] = 1
+    return z.T
+
 
 if __name__ == "__main__":
-    main()
+    path = '/home/romano/mep/BrianDataAnalyze/Scope1_denoised_mc_results.csv' 
+    m_sample = np.loadtxt(path, delimiter=',')[:, 1:200]
+    print(m_sample.shape)
+    timetrace = np.loadtxt('/home/romano/mep/BrianDataAnalyze/RawTrace.csv', delimiter=',')[:, 1:200]
+    make_cortical_ground_hypothesis(m_sample, 0.5)
+    for i in range(199):
+        plt.scatter(m_sample[:, i], i*np.ones_like(m_sample[:, i]), c='k')
+    plt.show()
+    for i in range(20):
+        plt.plot(1/30*np.arange(0, len(timetrace[:, i])), timetrace[:, i])
+        plt.scatter(m_sample[:, i], np.zeros_like(m_sample[:, i]), c='k')
+        plt.show()
+    #d = []
+    #for i in range(212):
+    #    c = m_sample[:, i]
+    #    c = c[np.logical_not(np.isnan(c))]
+    #    d.extend(c[1:] - c[:-1])
+    #e = np.array(sorted(d))
+    #ax = plt.gca()
+    #ax.set_yscale('log')
+    #val, edges = np.histogram(e, bins=300)
+    #plt.plot(edges[:-1], val)
+    #plt.xlabel('Inter-event distance [sec]')
+    #plt.ylabel('Occurences')
+
+    #plt.show()
+    #z = locate_indices_neuron_per_pattern(m_sample)
+    #plt.imshow(z, cmap='Greys')
+    #plt.show()
