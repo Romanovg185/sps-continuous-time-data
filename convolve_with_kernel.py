@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 """
 Makes a ground hypothesis, assuming all cells fire uncorrelated and with a rate equal to m
 :param m: Matrix to infer firing rate fram
+:param width: Not used, just to obtain same input type as make_cortical_ground_hypothesis
 :returns: A ground truth firing matrix
 """
-def make_ground_hypothesis(m):
+def make_ground_hypothesis(m, width):
     # Infer inter-spike time interval iti
     itis = []
     for i in m.T:
@@ -66,17 +67,17 @@ def make_cortical_ground_hypothesis(m, width):
         plateau_n.extend(plateau_number)
         plateau_spikes.extend(l)
 
-    d_singleton_hat = sum(singleton_distances)/len(singleton_distances)
+    d_singleton_hat = np.mean(singleton_distances)
     d_plateau_hat = np.median(plateau_distances)
-    n_peaks_in_plateau_hat = np.median(plateau_n)
-    print(d_plateau_hat)
-    d_plateau_spikes_hat = sum(plateau_spikes)/len(plateau_spikes)
+    n_peaks_in_plateau_hat = np.median(plateau_distance)
+    d_plateau_spikes_hat = np.mean(plateau_spikes)
 
     # Sparse spikes
     m_singleton = []
     for i in range(m.shape[1]):
-        singleton_spikes = np.cumsum(np.random.exponential(d_singleton_hat, size=1000))
-        singleton_spikes = singleton_spikes[singleton_spikes < np.nanmax(m[i, :])] # Not larger than original time series
+        singleton_spikes = np.cumsum(np.random.exponential(d_singleton_hat, size=10000))
+        z = singleton_spikes < np.nanmax(m[i, :])
+        singleton_spikes = singleton_spikes[z] # Not larger than original time series
         m_singleton.append(singleton_spikes)
 
     # Plateaus
@@ -95,10 +96,7 @@ def make_cortical_ground_hypothesis(m, width):
     final = np.full((m.shape[1], l_tot), np.nan)
     for i, el in enumerate(m_tot):
         final[i, :len(el)] = el
-    for i, el in enumerate(final):
-        plt.scatter(el, i*np.ones_like(el), c='C0')
-    plt.ylabel('Cell number')
-    plt.xlabel('Time [sec]')
+    return final.T
 
 
 """
@@ -107,7 +105,7 @@ Convolve with a Epanechnikov kernel
 :param kernel_steepness: Parameter of kernel width
 :returns: A tuple containing per peak ([peak_area[0], ...], [peak_amplitudes], [peak_onset_time], [peak_end_time])
 """
-def convolve_with_kernel(m, kernel_steepness=0.020):
+def convolve_with_kernel(m, kernel_steepness=0.100):
     # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
     u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
     kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
@@ -151,6 +149,7 @@ Determine minimum area width to be considered an SP as the area that only appear
 :returns: Float that contains the minimum peak area for it to be considered a spike
 """
 def find_minimum_peak_area(m_ground):
+    print("Finding")
     areas, amplitudes, onset_times, end_times = convolve_with_kernel(m_ground)
     sorted_areas = np.sort(areas)
     min_area = sorted_areas[np.floor(0.95*len(sorted_areas)).astype(int)]
@@ -161,9 +160,9 @@ Find indices of significant regions of firing pattern
 :param m_sample: Matrix of sample
 :returns: List of tuples of (begin, end) forall significant peaks
 """
-def get_indices_significant_overlap(m_sample):
-    n_samples = 20 # Number of samples of ground truth
-    l = list(map(find_minimum_peak_area, [make_ground_hypothesis(m_sample) for i in range(n_samples)]))
+def get_indices_significant_overlap(m_sample, f_ground_hypothesis, width):
+    n_samples = 1 # Number of samples of ground truth
+    l = list(map(find_minimum_peak_area, [f_ground_hypothesis(m_sample, width) for i in range(n_samples)]))
     minimum_peak_area = sum(l)/len(l)
     areas, amplitudes, starts, ends = convolve_with_kernel(m_sample)
     left_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, starts))))
@@ -179,8 +178,9 @@ Obtain all neurons that possibly could be part of the pattern
 :param m: Matrix containing onset times in continuous time
 :returns: Matrix of concatenated synchronous patterns
 """
-def locate_indices_neuron_per_pattern(m):
-    ind = get_indices_significant_overlap(m_sample)
+def locate_indices_neuron_per_pattern(m, f_ground_hypothesis, width):
+    ind = get_indices_significant_overlap(m_sample, f_ground_hypothesis, width)
+    print("Done identifying indices")
     patterns = []
     for start, end in ind:
         single_pattern = []
@@ -197,32 +197,44 @@ def locate_indices_neuron_per_pattern(m):
 
 
 if __name__ == "__main__":
+    #Cortex
     path = '/home/romano/mep/BrianDataAnalyze/Scope1_denoised_mc_results.csv' 
     m_sample = np.loadtxt(path, delimiter=',')[:, 1:200]
-    print(m_sample.shape)
-    timetrace = np.loadtxt('/home/romano/mep/BrianDataAnalyze/RawTrace.csv', delimiter=',')[:, 1:200]
-    make_cortical_ground_hypothesis(m_sample, 0.5)
-    for i in range(199):
-        plt.scatter(m_sample[:, i], i*np.ones_like(m_sample[:, i]), c='k')
+    z = locate_indices_neuron_per_pattern(m_sample, make_cortical_ground_hypothesis, 1)
+    plt.imshow(z)
     plt.show()
-    for i in range(20):
-        plt.plot(1/30*np.arange(0, len(timetrace[:, i])), timetrace[:, i])
-        plt.scatter(m_sample[:, i], np.zeros_like(m_sample[:, i]), c='k')
-        plt.show()
-    #d = []
-    #for i in range(212):
-    #    c = m_sample[:, i]
-    #    c = c[np.logical_not(np.isnan(c))]
-    #    d.extend(c[1:] - c[:-1])
-    #e = np.array(sorted(d))
-    #ax = plt.gca()
-    #ax.set_yscale('log')
-    #val, edges = np.histogram(e, bins=300)
-    #plt.plot(edges[:-1], val)
-    #plt.xlabel('Inter-event distance [sec]')
-    #plt.ylabel('Occurences')
+    h = np.sum(z, axis=1)
+    plt.subplot(1, 2, 1)
+    plt.bar(np.arange(0, 199), h, width=1)
+    plt.xlabel("Cell number")
+    plt.ylabel("Number of significant synchronous firing patterns partaken in")
+    plt.title("There is a large inhomogeneity of SP participation in the cortex")
 
+    plt.subplot(1, 2, 2)
+    plt.bar(np.arange(0, 199), sorted(h), width=1)
+    plt.xlabel("Cell number sorted")
+    plt.title("This inhomogeneity is not due to chance")
+
+    plt.show()
+    
+    #Cerebellum
+    #path = '/home/romano/mep/BrianDataAnalyze/Scope2_denoised_mc_results.csv' 
+    #m_sample = np.loadtxt(path, delimiter=',')
+    #print(m_sample.shape)
+    #raw = np.loadtxt('/home/romano/mep/BrianDataAnalyze/RawTrace.csv', delimiter=',')
+    #z = locate_indices_neuron_per_pattern(m_sample, make_cortical_ground_hypothesis, 1)
+    #plt.imshow(z)
     #plt.show()
-    #z = locate_indices_neuron_per_pattern(m_sample)
-    #plt.imshow(z, cmap='Greys')
+    #h = np.sum(z, axis=1)
+    #plt.subplot(1, 2, 1)
+    #plt.bar(np.arange(0, 199), h, width=1)
+    #plt.xlabel("Cell number")
+    #plt.ylabel("Number of significant synchronous firing patterns partaken in")
+    #plt.title("There is a large inhomogeneity of SP participation in the cortex")
+
+    #plt.subplot(1, 2, 2)
+    #plt.bar(np.arange(0, 199), sorted(h), width=1)
+    #plt.xlabel("Cell number sorted")
+    #plt.title("This inhomogeneity is not due to chance")
+
     #plt.show()
