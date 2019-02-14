@@ -210,8 +210,10 @@ def locate_indices_neuron_per_pattern(m, minimum_peak_area):
 
 if __name__ == "__main__":
     #Cortex
-    m_sample = np.loadtxt('Scope1_denoised_mc_results.csv', delimiter=',')
-    z = locate_indices_neuron_per_pattern(m_sample, 1)
+    file_name = 'Scope1_denoised_mc_results.csv'
+    weight_factor_for_detecting_SPs = 1
+    m_sample = np.loadtxt(file_name, delimiter=',')
+    z = locate_indices_neuron_per_pattern(m_sample, weight_factor_for_detecting_SPs)
     plt.imshow(z)
     plt.show()
     #h = np.sum(z, axis=1)
