@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
 ####################################
@@ -254,6 +255,12 @@ if __name__ == "__main__":
         plt.scatter(el, i*np.ones_like(el), c='C0')
     for i, el in enumerate(m_sample.T):
         plt.scatter(el, i*np.ones_like(el), c='C1')
+    bl = mlines.Line2D([], [], color='C0', marker='o', label='Ground truth', linewidth=0)
+    org = mlines.Line2D([], [], color='C1', marker='o', label='Real data', linewidth=0)
+    plt.legend(handles=[bl, org], loc=1)
+    plt.title("Is this a representative ground truth???")
+    plt.xlabel("Time [sec]")
+    plt.ylabel("Neuron number")
     plt.show()
     #z = locate_indices_neuron_per_pattern(m_sample, weight_factor_for_detecting_SPs)
     #plt.imshow(z)
