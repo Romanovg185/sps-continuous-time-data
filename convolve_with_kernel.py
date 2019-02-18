@@ -37,7 +37,7 @@ def make_ground_hypothesis(m, width):
 """
 Generate a ground hypothesis, assuming cortical data consisting of a summation of sparse spikes and firing plateaus
 :param m: Matrix to infer from
-param width: Time width of a group to consider it a plateau
+:param width: Time width of a group to consider it a plateau
 :returns: A ground truth firing matrix
 """
 def make_cortical_ground_hypothesis(m, width):
@@ -109,6 +109,42 @@ def make_cortical_ground_hypothesis(m, width):
 ###################################
 # CODE FUNCTIONAL FROM THIS POINT #
 ###################################
+
+"""
+Produces a ground truth by taking width-sized intervals of random cells, sticking them together to get a ground truth. Width should be representative for at least 2x the average plateau width
+:param m: Matrix with raw data to infer from
+:param width: Width of time intervals sampled
+:returns: A ground truth matrix
+"""
+def make_permutation_based_ground_truth(m, width):
+    m = m.T
+    total = []
+    max_t = np.nanmax(m)
+    print(max_t)
+    for virtual_cell in range(m.shape[0]):
+        per_cell = set() # Set (inherently singleton) used to prevent double sampling of points
+        for i, random_cell in enumerate(np.random.randint(0, m.shape[0], np.ceil(max_t/width).astype(int))):
+            trace = m[random_cell, :][np.logical_not(np.isnan(m[random_cell, :]))]
+            random_interval_start = max_t*np.random.rand()
+            start = random_interval_start
+            end = random_interval_start + width
+            left = trace >= start
+            right = trace < end
+            mask = np.logical_and(left, right)
+            segment = trace[mask]
+            segment -= random_interval_start
+            segment += i*width
+            per_cell.update((i for i in segment)) # Passing in a generator because I'm cool like that
+        per_cell = sorted(list(per_cell))
+        total.append(per_cell)
+
+    # To rectangular matrix
+    max_size = max([len(i) for i in total])
+    m_ground = np.full((m.shape[0], max_size), np.nan)
+    for i, el in enumerate(total):
+        m_ground[i, :len(el)] = np.array(el)
+
+    return m_ground.T
 
 """
 Convolve with a Epanechnikov kernel
@@ -213,9 +249,15 @@ if __name__ == "__main__":
     file_name = 'Scope1_denoised_mc_results.csv'
     weight_factor_for_detecting_SPs = 1
     m_sample = np.loadtxt(file_name, delimiter=',')
-    z = locate_indices_neuron_per_pattern(m_sample, weight_factor_for_detecting_SPs)
-    plt.imshow(z)
+    m_ground = make_permutation_based_ground_truth(m_sample, 1)
+    for i, el in enumerate(m_ground.T):
+        plt.scatter(el, i*np.ones_like(el), c='C0')
+    for i, el in enumerate(m_sample.T):
+        plt.scatter(el, i*np.ones_like(el), c='C1')
     plt.show()
+    #z = locate_indices_neuron_per_pattern(m_sample, weight_factor_for_detecting_SPs)
+    #plt.imshow(z)
+    #plt.show()
     #h = np.sum(z, axis=1)
     #plt.subplot(1, 2, 1)
     #plt.bar(np.arange(0, 199), h, width=1)
