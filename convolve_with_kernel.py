@@ -2,114 +2,10 @@ import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
-####################################
-# GROUND TRUTHS NOT YET FUNCTIONAL #
-####################################
-"""
-Makes a ground hypothesis, assuming all cells fire uncorrelated and with a rate equal to m
-:param m: Matrix to infer firing rate fram
-:param width: Not used, just to obtain same input type as make_cortical_ground_hypothesis
-:returns: A ground truth firing matrix
-"""
-def make_ground_hypothesis(m, width):
-    # Infer inter-spike time interval iti
-    itis = []
-    for i in m.T:
-        spikes = i[np.logical_not(np.isnan(i))]
-        iti = spikes[1:] - spikes[:-1]
-        itis.extend(iti)
-    gram = sorted(itis) - min(itis)
-    lambda_hat = 1/np.mean(gram) # Maximum likelihood estimator of exponential distribution is 1/lambda as per Wiki
-
-    # Generate ground hypothesis based on lambda_hat
-    firing_times = []
-    for i in m.T:
-        max_t = np.nanmax(i)
-        in_silico = np.random.exponential(scale=lambda_hat, size=(10000, 1))
-        firing_time = np.cumsum(in_silico)
-        firing_time = firing_time[firing_time < max_t]
-        firing_times.append(firing_time)
-    max_num_firing_times = max([len(i[np.logical_not(np.isnan(i))]) for i in firing_times])
-    firing_matrix = np.full((len(firing_times), max_num_firing_times), np.nan)
-    for i, el in enumerate(firing_times):
-        firing_matrix[i, :len(el)] = el
-    return(firing_matrix.T)
-
-"""
-Generate a ground hypothesis, assuming cortical data consisting of a summation of sparse spikes and firing plateaus
-:param m: Matrix to infer from
-:param width: Time width of a group to consider it a plateau
-:returns: A ground truth firing matrix
-"""
-def make_cortical_ground_hypothesis(m, width):
-    min_number_for_plateau = 2
-    lam_sparse = 0
-    lam_plateau = 0
-    n_plateau = 0
-    singleton_distances = []
-    plateau_distances = []
-    plateau_n = []
-    plateau_spikes = []
-    for cell in m.T:
-        cell = cell[np.logical_not(np.isnan(cell))]
-        groupings = [[0.0]]
-        for spike in cell:
-            if abs(spike - groupings[-1][-1]) < width:
-                groupings[-1].append(spike)
-            else:
-                groupings.append([spike])
-        singletons = [i for i in groupings if len(i) == min_number_for_plateau]
-        singleton_distance = [abs(i[0] - j[0]) for i, j in zip(singletons[1:], singletons[:-1])]
-        plateaus = [i for i in groupings if len(i) > min_number_for_plateau]
-        plateau_distance = list(map(lambda x: abs(x[0][0] - x[1][0]), zip(plateaus[1:], plateaus[:-1])))
-        plateau_number = [len(i) for i in plateaus]
-        l = []
-        for plat in plateaus:
-            l.extend([abs(i - j) for i, j in zip(plat[1:], plat[:-1])])
-        singleton_distances.extend(singleton_distance)
-        plateau_distances.extend(plateau_distance)
-        plateau_n.extend(plateau_number)
-        plateau_spikes.extend(l)
-
-    d_singleton_hat = np.mean(singleton_distances)
-    d_plateau_hat = np.median(plateau_distances)
-    n_peaks_in_plateau_hat = np.median(plateau_distance)
-    d_plateau_spikes_hat = np.mean(plateau_spikes)
-
-    # Sparse spikes
-    m_singleton = []
-    for i in range(m.shape[1]):
-        singleton_spikes = np.cumsum(np.random.exponential(d_singleton_hat, size=10000))
-        z = singleton_spikes < np.nanmax(m[:, i])
-        singleton_spikes = singleton_spikes[z] # Not larger than original time series
-        m_singleton.append(singleton_spikes)
-
-    # Plateaus
-    m_plat = []
-    #for i in range(m.shape[1]):
-    #    plateau_start_times = np.cumsum(np.random.exponential(d_plateau_hat, size=1000))
-    #    plateau_start_times = plateau_start_times[plateau_start_times < np.nanmax(m[i,:])]
-    #    plateau_spikes = [np.cumsum(np.random.exponential(d_plateau_spikes_hat, size=i.astype(int))) for i in np.random.exponential(d_plateau_hat, size=plateau_start_times.size)]
-    #    plateau_final = [i + j for i, j in zip(plateau_start_times, plateau_spikes)]
-    #    plateau_final = np.hstack(plateau_final)
-    #    m_plat.append(plateau_final)
-
-    # Combining
-    #m_tot = [sorted(np.hstack([i, j])) for i, j in zip(m_singleton, m_plat)]
-    m_tot = [sorted(i) for i in m_singleton]
-    l_tot = max([len(i) for i in m_tot])
-    final = np.full((m.shape[1], l_tot), np.nan)
-    for i, el in enumerate(m_tot):
-        final[i, :len(el)] = el
-    for i, el in enumerate(final.T):
-        plt.scatter(el, i*np.ones_like(el), c='C0')
-    plt.show()
-    return final.T
-
-
-###################################
-# CODE FUNCTIONAL FROM THIS POINT #
-###################################
+### Free parameters ###
+width_sampling_frame_ground_truth_permutation = 1
+kernel_steepness = 0.100
+cutoff_prob_spurious_selection = 0.05
 
 """
 Produces a ground truth by taking width-sized intervals of random cells, sticking them together to get a ground truth. Width should be representative for at least 2x the average plateau width
@@ -117,11 +13,11 @@ Produces a ground truth by taking width-sized intervals of random cells, stickin
 :param width: Width of time intervals sampled
 :returns: A ground truth matrix
 """
-def make_permutation_based_ground_truth(m, width):
+def make_permutation_based_ground_truth(m):
+    width = width_sampling_frame_ground_truth_permutation
     m = m.T
     total = []
     max_t = np.nanmax(m)
-    print(max_t)
     for virtual_cell in range(m.shape[0]):
         per_cell = set() # Set (inherently singleton) used to prevent double sampling of points
         for i, random_cell in enumerate(np.random.randint(0, m.shape[0], np.ceil(max_t/width).astype(int))):
@@ -151,9 +47,9 @@ def make_permutation_based_ground_truth(m, width):
 Convolve with a Epanechnikov kernel
 :param m: Raw input spikes in a square matrix, padded with np.nans
 :param kernel_steepness: Parameter of kernel width
-:returns: A tuple containing per peak ([peak_area[0], ...], [peak_amplitudes], [peak_onset_time], [peak_end_time])
+:returns: A list of tuples of the [(peak_area[0], peak_amplitudes[0], peak_onset_time[0], peak_end_time[0]), ...]
 """
-def convolve_with_kernel(m, kernel_steepness=0.100):
+def convolve_with_kernel(m):
     # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
     u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
     kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
@@ -167,8 +63,13 @@ def convolve_with_kernel(m, kernel_steepness=0.100):
         y[i, indices_of_spike_nonan] = 1
         y[i, :] = np.convolve(y[i, :], kernel, mode='same')
     z = np.sum(y, axis=0)
+    z -= np.mean(z)
+    z[z < 0] = 0
+    plt.plot(1/30*np.arange(0, 10000), z[:10000])
+    plt.savefig('foo.png')
+    plt.clf()
 
-    # Indentify peaks as regions of z such that all values are above zero, ending when a zero is reached
+    # Indentify peaks as regions of z such that all values are above the mean, ending when a value lower than the mean is reached
     peaks = [[]]
     indices_peak_starts = []
     indices_peak_ends = []
@@ -189,7 +90,7 @@ def convolve_with_kernel(m, kernel_steepness=0.100):
     times_peak_starts = [0.001*(i-1) for i in indices_peak_starts]
     times_peak_ends = [0.001*(i-1) for i in indices_peak_ends]
     peak_amplitudes = [np.max(i) for i in peaks]
-    return peak_areas, peak_amplitudes, times_peak_starts, times_peak_ends
+    return list(zip(peak_areas, peak_amplitudes, times_peak_starts, times_peak_ends))
 
 """
 Determine minimum area width to be considered an SP as the area that only appears randomly under H0 with a p=0.05
@@ -197,22 +98,22 @@ Determine minimum area width to be considered an SP as the area that only appear
 :returns: Float that contains the minimum peak area for it to be considered a spike
 """
 def find_minimum_peak_area(m_ground):
-    print("Finding")
     areas, amplitudes, onset_times, end_times = convolve_with_kernel(m_ground)
     sorted_areas = np.sort(areas)
-    min_area = sorted_areas[np.floor(0.95*len(sorted_areas)).astype(int)]
+    min_area = sorted_areas[np.floor((1 - cutoff_prob_spurious_selection)*len(sorted_areas)).astype(int)]
     return min_area
 
 """
 Find indices of significant regions of firing pattern
 :param m_sample: Matrix of sample
 :param minimum_peak_area: Size that a peak has to have to be considered an event
+###
 :returns: List of tuples of (begin, end) forall significant peaks
 """
-def get_indices_significant_overlap(m_sample, minimum_peak_area):
-    #n_samples = 1 # Number of samples of ground truth
-    #l = list(map(find_minimum_peak_area, [f_ground_hypothesis(m_sample, width) for i in range(n_samples)]))
-    #minimum_peak_area = sum(l)/len(l)
+def get_indices_significant_overlap(m_sample):
+    n_samples = 5 # Number of samples of ground truth
+    l = list(map(find_minimum_peak_area, [make_permutation_based_ground_truth(m_sample) for i in range(n_samples)]))
+    minimum_peak_area = sum(l)/len(l)
     areas, amplitudes, starts, ends = convolve_with_kernel(m_sample)
     left_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, starts))))
     left_edges = [i[1] for i in left_edges]
@@ -227,9 +128,8 @@ Obtain all neurons that possibly could be part of the pattern
 :param m: Matrix containing onset times in continuous time
 :returns: Matrix of concatenated synchronous patterns
 """
-def locate_indices_neuron_per_pattern(m, minimum_peak_area):
-    ind = get_indices_significant_overlap(m_sample, minimum_peak_area)
-    print("Done identifying indices")
+def locate_indices_neuron_per_pattern(m_sample):
+    ind = get_indices_significant_overlap(m_sample)
     patterns = []
     for start, end in ind:
         single_pattern = []
@@ -244,23 +144,79 @@ def locate_indices_neuron_per_pattern(m, minimum_peak_area):
         z[i, cells] = 1
     return z.T
 
+def identify_patterns_two_samples(m_0, m_1):
+    def reshape(m, shape):
+        m_reshaped = np.full((shape[0], m.shape[1]), np.nan)
+        m_reshaped[:m.shape[0], :] = m
+        return m_reshaped
+
+    def get_cells_firing_between_ts(m, left, right):
+        cells = []
+        for i, neuron in enumerate(m):
+            if len(np.where(np.logical_and(neuron >= left, neuron < right))[0]) > 0:
+                cells.append(i)
+        final = np.zeros((m.shape[0], 1))
+        final[cells] = 1
+        return final
+
+    n_samples = 2
+    ground_0 = [make_permutation_based_ground_truth(m_0) for i in range(n_samples)]
+    ground_1 = [make_permutation_based_ground_truth(m_1) for i in range(n_samples)]
+    ground_0_r = [reshape(i, j.shape) if i.shape[0] < j.shape[0] else i for i, j in zip(ground_0, ground_1)]
+    ground_1_r = [reshape(j, i.shape) if j.shape[0] < i.shape[0] else j for i, j in zip(ground_0, ground_1)]
+    peak_data = [convolve_with_kernel(np.concatenate([i, j], axis=1).T) for i, j in zip(ground_0_r, ground_1_r)]
+    
+    # i[0] corresponds to peak area, here we flatten based on that
+    flat_peak_area = []
+    for sample in peak_data:
+        for point in sample:
+            flat_peak_area.append(point[0])
+    sorted_peak_area = list(sorted(flat_peak_area))
+    area_generator = (el for i, el in enumerate(sorted_peak_area) if (1 - cutoff_prob_spurious_selection) < i/len(sorted_peak_area))
+    min_area = next(area_generator) # Generates first element in area_generator, i.e. the first element that's large enough
+    
+    m_0_r = reshape(m_0, m_1.shape) if m_0.shape[0] < m_1.shape[0] else m_0
+    m_1_r = reshape(m_1, m_0.shape) if m_1.shape[0] < m_0.shape[0] else m_1
+    peak_data = convolve_with_kernel(np.concatenate([m_0_r, m_1_r], axis=1).T)
+    peak_data_sorted = sorted(peak_data, key=lambda x: x[0])
+    time_intervals_of_significance = [(i[2], i[3]) for i in peak_data_sorted if i[0] > min_area]
+    involved_vectors = [get_cells_firing_between_ts(np.concatenate([m_0_r, m_1_r], axis=1).T, i[0], i[1]) for i in time_intervals_of_significance]
+    involved_matrix = np.hstack(involved_vectors)
+    first_signal = involved_matrix[:m_0.shape[1], :]
+    np.savetxt('Patterns_Scope1.csv', first_signal, delimiter=',')
+    second_signal = involved_matrix[m_0.shape[1]:, :]
+    np.savetxt('Patterns_Scope2.csv', second_signal, delimiter=',')
+    plt.subplot(1, 2, 1)
+    plt.imshow(first_signal, cmap='gray')
+    plt.subplot(1, 2, 2)
+    plt.imshow(second_signal, cmap='gray')
+    plt.show()
+    
 
 if __name__ == "__main__":
-    #Cortex
-    file_name = 'Scope1_denoised_mc_results.csv'
+    file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
+    file_name_cortex = 'Scope2_denoised_mc_results.csv'
     weight_factor_for_detecting_SPs = 1
-    m_sample = np.loadtxt(file_name, delimiter=',')
-    m_ground = make_permutation_based_ground_truth(m_sample, 1)
-    raw_data = np.loadtxt('Scope1_raw.csv', delimiter=',').T
-    for raw, onset, ground in zip(raw_data.T, m_sample.T, m_ground.T):
-        t = 1/30*np.arange(0, len(raw))
-        plt.plot(t, raw, label='Transient')
-        m, s, l = plt.stem(onset, 10*np.ones_like(onset), label='Inferred onset times', markerfmt='C1^', linefmt='C1-')
-        plt.setp(l, linewidth=0)
-        m, s, l = plt.stem(ground, 10*np.ones_like(ground), label='Ground truth onset times', markerfmt='C2^', linefmt='C2-')
-        plt.setp(l, linewidth=0)
-        plt.legend()
-        plt.xlabel('Time [sec]')
-        plt.ylabel('Intensity')
-        plt.show()
-        plt.clf() 
+
+    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+    identify_patterns_two_samples(m_cbl, m_ctx)
+    m_width = max(i.shape[0] for i in [m_cbl, m_ctx]) 
+    #
+    ## Reshaping for concatenation
+    #if m_width == m_cbl.shape[0]:
+    #    m_ctx = np.concatenate([m_ctx, np.full((m_width - m_ctx.shape[0], m_ctx.shape[1]), np.nan)], axis=0)
+    #elif m_width == m_ctx.shape[0]:
+    #    m_cbl = np.concatenate([m_cbl, np.full((m_width - m_cbl.shape[0], m_cbl.shape[1]), np.nan)], axis=0)
+    #
+    ## Main loop
+    #for shift in np.arange(-3, 4):
+    #    m_ctx_shifted = np.copy(m_ctx)
+    #    m_ctx_shifted = np.roll(m_ctx_shifted, shift=shift, axis=0)
+    #    m = np.concatenate([m_cbl, m_ctx_shifted], axis=1)
+    #    z = make_permutation_based_ground_truth(m)
+    #    print(m.shape)
+    #    print(z.shape)
+    #    plt.imshow(z, cmap='gray')
+    #    plt.savefig('shift{}.png'.format(shift))
+    #    plt.clf()
