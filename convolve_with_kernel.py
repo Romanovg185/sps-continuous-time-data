@@ -251,30 +251,16 @@ if __name__ == "__main__":
     weight_factor_for_detecting_SPs = 1
     m_sample = np.loadtxt(file_name, delimiter=',')
     m_ground = make_permutation_based_ground_truth(m_sample, 1)
-    for i, el in enumerate(m_ground.T):
-        plt.scatter(el, i*np.ones_like(el), c='C0')
-    for i, el in enumerate(m_sample.T):
-        plt.scatter(el, i*np.ones_like(el), c='C1')
-    bl = mlines.Line2D([], [], color='C0', marker='o', label='Ground truth', linewidth=0)
-    org = mlines.Line2D([], [], color='C1', marker='o', label='Real data', linewidth=0)
-    plt.legend(handles=[bl, org], loc=1)
-    plt.title("Is this a representative ground truth???")
-    plt.xlabel("Time [sec]")
-    plt.ylabel("Neuron number")
-    plt.show()
-    #z = locate_indices_neuron_per_pattern(m_sample, weight_factor_for_detecting_SPs)
-    #plt.imshow(z)
-    #plt.show()
-    #h = np.sum(z, axis=1)
-    #plt.subplot(1, 2, 1)
-    #plt.bar(np.arange(0, 199), h, width=1)
-    #plt.xlabel("Cell number")
-    #plt.ylabel("Number of significant synchronous firing patterns partaken in")
-    #plt.title("There is a large inhomogeneity of SP participation in the cortex")
-
-    #plt.subplot(1, 2, 2)
-    #plt.bar(np.arange(0, 199), sorted(h), width=1)
-    #plt.xlabel("Cell number sorted")
-    #plt.title("This inhomogeneity is not due to chance")
-
-    #plt.show()
+    raw_data = np.loadtxt('Scope1_raw.csv', delimiter=',').T
+    for raw, onset, ground in zip(raw_data.T, m_sample.T, m_ground.T):
+        t = 1/30*np.arange(0, len(raw))
+        plt.plot(t, raw, label='Transient')
+        m, s, l = plt.stem(onset, 10*np.ones_like(onset), label='Inferred onset times', markerfmt='C1^', linefmt='C1-')
+        plt.setp(l, linewidth=0)
+        m, s, l = plt.stem(ground, 10*np.ones_like(ground), label='Ground truth onset times', markerfmt='C2^', linefmt='C2-')
+        plt.setp(l, linewidth=0)
+        plt.legend()
+        plt.xlabel('Time [sec]')
+        plt.ylabel('Intensity')
+        plt.show()
+        plt.clf() 
