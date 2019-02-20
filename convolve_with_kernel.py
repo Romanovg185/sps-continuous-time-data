@@ -65,9 +65,6 @@ def convolve_with_kernel(m):
     z = np.sum(y, axis=0)
     z -= np.mean(z)
     z[z < 0] = 0
-    plt.plot(1/30*np.arange(0, 10000), z[:10000])
-    plt.savefig('foo.png')
-    plt.clf()
 
     # Indentify peaks as regions of z such that all values are above the mean, ending when a value lower than the mean is reached
     peaks = [[]]
@@ -179,44 +176,56 @@ def identify_patterns_two_samples(m_0, m_1):
     m_1_r = reshape(m_1, m_0.shape) if m_1.shape[0] < m_0.shape[0] else m_1
     peak_data = convolve_with_kernel(np.concatenate([m_0_r, m_1_r], axis=1).T)
     peak_data_sorted = sorted(peak_data, key=lambda x: x[0])
-    time_intervals_of_significance = [(i[2], i[3]) for i in peak_data_sorted if i[0] > min_area]
+    time_intervals_of_significance = [(i[2], i[3], i[0]) for i in peak_data_sorted if i[0] > min_area]
+
     involved_vectors = [get_cells_firing_between_ts(np.concatenate([m_0_r, m_1_r], axis=1).T, i[0], i[1]) for i in time_intervals_of_significance]
-    involved_matrix = np.hstack(involved_vectors)
-    first_signal = involved_matrix[:m_0.shape[1], :]
-    np.savetxt('Patterns_Scope1.csv', first_signal, delimiter=',')
-    second_signal = involved_matrix[m_0.shape[1]:, :]
-    np.savetxt('Patterns_Scope2.csv', second_signal, delimiter=',')
-    plt.subplot(1, 2, 1)
-    plt.imshow(first_signal, cmap='gray')
-    plt.subplot(1, 2, 2)
-    plt.imshow(second_signal, cmap='gray')
-    plt.show()
+    involved_areas = [i[2] for i in time_intervals_of_significance]
+    involved_vector_areas = [i for i in zip(involved_areas, involved_vectors)]
+    involved_vector_areas_sorted = sorted(involved_vector_areas, key=lambda x: x[0], reverse=True)
+    involved_areas = [i[0] for i in involved_vector_areas_sorted]
+    involved_vectors = [i[1] for i in involved_vector_areas_sorted]
     
+    involved_matrix = np.hstack(involved_vectors)
+    involved_matrix = np.vstack([np.array(involved_areas).T, involved_matrix])
+
+    first_signal = involved_matrix[:m_0.shape[1], :]
+    second_signal = involved_matrix[m_0.shape[1]:, :]
+    
+    return first_signal, second_signal
+
+    
+def plot_spectrum():
+    file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
+    file_name_cortex = 'Scope2_denoised_mc_results.csv'
+    weight_factor_for_detecting_SPs = 1
+
+    for i, shift in enumerate(0.25*np.arange(-4, 5)):
+        print(shift)
+        m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+        m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+        m_ctx += shift
+        p_cbl, p_ctx = identify_patterns_two_samples(m_cbl, m_ctx)
+        spectrum = p_cbl[0, :]
+        plt.semilogy(spectrum, label=r"$\phi_{\mathrm{cortex}} = $" + str(round(shift, 2)) + " sec", c='C{}'.format(i))
+    plt.xlabel('Sorted spectrum index')
+    plt.ylabel('Area of detected convolution peak')
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
     file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
     file_name_cortex = 'Scope2_denoised_mc_results.csv'
     weight_factor_for_detecting_SPs = 1
 
-    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
-    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
-    identify_patterns_two_samples(m_cbl, m_ctx)
-    m_width = max(i.shape[0] for i in [m_cbl, m_ctx]) 
-    #
-    ## Reshaping for concatenation
-    #if m_width == m_cbl.shape[0]:
-    #    m_ctx = np.concatenate([m_ctx, np.full((m_width - m_ctx.shape[0], m_ctx.shape[1]), np.nan)], axis=0)
-    #elif m_width == m_ctx.shape[0]:
-    #    m_cbl = np.concatenate([m_cbl, np.full((m_width - m_cbl.shape[0], m_cbl.shape[1]), np.nan)], axis=0)
-    #
-    ## Main loop
-    #for shift in np.arange(-3, 4):
-    #    m_ctx_shifted = np.copy(m_ctx)
-    #    m_ctx_shifted = np.roll(m_ctx_shifted, shift=shift, axis=0)
-    #    m = np.concatenate([m_cbl, m_ctx_shifted], axis=1)
-    #    z = make_permutation_based_ground_truth(m)
-    #    print(m.shape)
-    #    print(z.shape)
-    #    plt.imshow(z, cmap='gray')
-    #    plt.savefig('shift{}.png'.format(shift))
-    #    plt.clf()
+    for i, shift in enumerate(0.25*np.arange(-4, 5)):
+        print(shift)
+        m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+        m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+        m_ctx += shift
+        p_cbl, p_ctx = identify_patterns_two_samples(m_cbl, m_ctx)
+        spectrum = p_cbl[0, :]/(np.sum(p_cbl[1:, :], axis=0) + np.sum(p_ctx[1:, :], axis=0))
+        plt.semilogy(spectrum, label=r"$\phi_{\mathrm{cortex}} = $" + str(round(shift, 2)) + " sec", c='C{}'.format(i))
+    plt.xlabel('Sorted spectrum index')
+    plt.ylabel('Area of detected convolution peak / pattern width at peak')
+    plt.legend()
+    plt.show()
