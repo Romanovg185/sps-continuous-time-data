@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 
 ### Free parameters ###
 width_sampling_frame_ground_truth_permutation = 1
@@ -215,17 +216,28 @@ def plot_spectrum():
 if __name__ == "__main__":
     file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
     file_name_cortex = 'Scope2_denoised_mc_results.csv'
+    shifts = np.arange(-4, 4.01, 0.01)
     weight_factor_for_detecting_SPs = 1
 
-    for i, shift in enumerate(0.25*np.arange(-4, 5)):
-        print(shift)
-        m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
-        m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
-        m_ctx += shift
-        p_cbl, p_ctx = identify_patterns_two_samples(m_cbl, m_ctx)
-        spectrum = p_cbl[0, :]/(np.sum(p_cbl[1:, :], axis=0) + np.sum(p_ctx[1:, :], axis=0))
-        plt.semilogy(spectrum, label=r"$\phi_{\mathrm{cortex}} = $" + str(round(shift, 2)) + " sec", c='C{}'.format(i))
-    plt.xlabel('Sorted spectrum index')
-    plt.ylabel('Area of detected convolution peak / pattern width at peak')
-    plt.legend()
-    plt.show()
+    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+    l = [(m_cbl, m_ctx + shift) for shift in shifts]
+    def helper(x): return identify_patterns_two_samples(x[0], x[1])
+    with Pool(3) as p:
+        ll = p.map(helper, l)
+    spectra = [np.sum(i[0, :]) + np.sum(j[0, :]) for i, j in ll]
+    with open('output.txt', 'w') as f:
+        for i in spectra:
+            f.write(str(i))
+            f.write(', ')
+    #for i, shift in enumerate(0.25*np.arange(-4, 5)):
+    #    print(shift)
+    #    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+    #    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+    #    m_ctx += shift
+    #    p_cbl, p_ctx = identify_patterns_two_samples(m_cbl, m_ctx)
+    #    spectrum = p_cbl[0, :]/(np.sum(p_cbl[1:, :], axis=0) + np.sum(p_ctx[1:, :], axis=0))
+    #    plt.semilogy(spectrum, label=r"$\phi_{\mathrm{cortex}} = $" + str(round(shift, 2)) + " sec", c='C{}'.format(i))
+    #plt.xlabel('Phase shift [sec]')
+    #plt.ylabel('Total area of significant convolution peaks')
+    #plt.show()
