@@ -94,7 +94,36 @@ def main():
         plt.xlabel('Time [sec]')
         plt.ylabel('Number of cells partaking in pattern')
         plt.show()
-    plot6()
+
+    """
+    Plot matrices but not with events on x-axis, but ts
+    """
+    def plot7():
+        scope1_raw = np.loadtxt('Scope2_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_sum = np.sum(scope1_raw, axis=0)
+        timecourse = 1/30*np.arange(scope1_raw.shape[1])
+        scope1_patterns = np.loadtxt('Scope2_denoised_mc_results.csv', delimiter=',')
+        intervals = get_indices_significant_overlap(scope1_patterns)
+        fig = plt.figure()
+        figure = fig.add_subplot(111)
+        total = []
+        for start, end in intervals:
+            time_mask = np.logical_and(timecourse < 0.001*end, timecourse >= 0.001*start)
+            for ts in timecourse[time_mask]:
+                l = np.zeros(scope1_patterns.shape[1])
+                for i, cell in enumerate(scope1_patterns.T): #Iterate per cell
+                    if np.sum(np.abs(cell - ts) < 0.1): # If at least 1 firing event is closer than 0.1 sec to the time point
+                        l[i] = 1
+                total.append(l)
+        m_tot = np.vstack(total)
+        m_tot = m_tot.T
+        plt.imshow(m_tot)
+        plt.title('Scope 2')
+        plt.xlabel('Time step')
+        plt.ylabel('Cell id')
+        plt.show()
+
+    plot7()
 
 
 
