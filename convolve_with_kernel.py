@@ -46,6 +46,7 @@ def make_permutation_based_ground_truth(m):
 
 """
 Convolve with a Epanechnikov kernel
+NOTE: Time runs until 300s to assure that the kernel can nicely converge to 0 at the right edge
 :param m: Raw input spikes in a square matrix, padded with np.nans
 :param kernel_steepness: Parameter of kernel width
 :returns: A list of tuples of the [(peak_area[0], peak_amplitudes[0], peak_onset_time[0], peak_end_time[0]), ...]
@@ -54,11 +55,11 @@ def convolve_with_kernel(m):
     # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
     u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
     kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
-    t_axis = np.arange(0, np.ceil(np.nanmax(m)), 0.001)
-    t = np.zeros((m.shape[0], len(t_axis)))
+    t_axis = np.arange(0, 300, 0.001)
+    t = np.zeros((m.shape[1], len(t_axis)))
     y = np.zeros_like(t)
     t += t_axis
-    for i in range(m.shape[1]):
+    for i in range(m.shape[1]): # with i as cell index
         indices_of_spike = (m[:, i]/0.001).astype(int)
         indices_of_spike_nonan = indices_of_spike[indices_of_spike >= 0]
         y[i, indices_of_spike_nonan] = 1
@@ -96,7 +97,8 @@ Determine minimum area width to be considered an SP as the area that only appear
 :returns: Float that contains the minimum peak area for it to be considered a spike
 """
 def find_minimum_peak_area(m_ground):
-    areas, amplitudes, onset_times, end_times = convolve_with_kernel(m_ground)
+    l = convolve_with_kernel(m_ground)
+    areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
     sorted_areas = np.sort(areas)
     min_area = sorted_areas[np.floor((1 - cutoff_prob_spurious_selection)*len(sorted_areas)).astype(int)]
     return min_area
@@ -112,7 +114,7 @@ def get_indices_significant_overlap(m_sample):
     n_samples = 5 # Number of samples of ground truth
     l = list(map(find_minimum_peak_area, [make_permutation_based_ground_truth(m_sample) for i in range(n_samples)]))
     minimum_peak_area = sum(l)/len(l)
-    areas, amplitudes, starts, ends = convolve_with_kernel(m_sample)
+    areas, amplitudes, starts, ends = zip(*convolve_with_kernel(m_sample))
     left_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, starts))))
     left_edges = [i[1] for i in left_edges]
     right_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, ends))))
@@ -213,7 +215,7 @@ def plot_spectrum():
     plt.legend()
     plt.show()
 
-if __name__ == "__main__":
+def plot_areas_involved():
     file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
     file_name_cortex = 'Scope2_denoised_mc_results.csv'
     shifts = np.arange(-4, 4.01, 0.01)
@@ -230,14 +232,27 @@ if __name__ == "__main__":
         for i in spectra:
             f.write(str(i))
             f.write(', ')
-    #for i, shift in enumerate(0.25*np.arange(-4, 5)):
-    #    print(shift)
-    #    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
-    #    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
-    #    m_ctx += shift
-    #    p_cbl, p_ctx = identify_patterns_two_samples(m_cbl, m_ctx)
-    #    spectrum = p_cbl[0, :]/(np.sum(p_cbl[1:, :], axis=0) + np.sum(p_ctx[1:, :], axis=0))
-    #    plt.semilogy(spectrum, label=r"$\phi_{\mathrm{cortex}} = $" + str(round(shift, 2)) + " sec", c='C{}'.format(i))
-    #plt.xlabel('Phase shift [sec]')
-    #plt.ylabel('Total area of significant convolution peaks')
-    #plt.show()
+
+
+def helper(x):
+    return identify_patterns_two_samples(x[0], x[1])
+
+def plot_n_neurons_involved():
+    file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
+    file_name_cortex = 'Scope2_denoised_mc_results.csv'
+    shifts = np.arange(-4, 4.01, 0.05)
+    weight_factor_for_detecting_SPs = 1
+
+    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+    l = [(m_cbl, m_ctx + shift) for shift in shifts]
+    with Pool(7) as p:
+        ll = p.map(helper, l)
+    spectra = [np.sum(np.sum(i[1:, :], axis=0)) + np.sum(np.sum(i[1:, :], axis=0)) for i, j in ll]
+    with open('output.txt', 'w') as f:
+        for i in spectra:
+            f.write(str(i))
+            f.write(', ')
+
+if __name__ == "__main__":
+    plot_n_neurons_involved()
