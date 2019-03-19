@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib import cm
 
+"""
+Plots a line that shows the number of shared events per neuron pair
+"""
 def number_of_pairs_per_threshold():
     
     partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/Data/Partaking_Cells_Per_Synchronous_Event_Scope1.csv', delimiter=',')    
@@ -33,6 +36,9 @@ def number_of_pairs_per_threshold():
     plt.ylabel('Number of significant cell pairs')
     plt.show()
 
+"""
+Plots the pairwise shared number of significant correlation events per neuron pair
+"""
 def correlation_score_matrix():
     is_plotting_autocorrelation = True
     is_logarithmic_color_map = True
@@ -76,7 +82,12 @@ def correlation_score_matrix():
 
     plt.show()
 
-def correlation_score_matrix_above_threshold():
+"""
+Plots the pairwise shared number of significant correlation events per neuron pair.
+A neuron (column/row) is filtered out if there is no other neuron with which it shares more than threshold firing events
+:param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
+"""
+def correlation_score_matrix_above_threshold(threshold=10):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
@@ -89,7 +100,6 @@ def correlation_score_matrix_above_threshold():
     ratio = n_scope_1/size
     correlation_score = np.zeros((size, size))
 
-    threshold = 10
     for i, first in enumerate(total_partaking):
         for j, sec in enumerate(total_partaking):
             events_shared = np.sum(np.logical_and(first, sec))
@@ -128,5 +138,70 @@ def correlation_score_matrix_above_threshold():
 
     plt.show()
 
+"""
+Plots the pairwise shared number of significant correlation events per neuron pair.
+A neuron (column/row) is filtered out if there is no other neuron with which it shares more than threshold firing events
+:param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
+:returns: List of [((cell, cell), correlation_score)] sorted by correlation score
+"""
+def sorted_correlation_score_matrix_above_threshold(threshold=12):
+    is_plotting_autocorrelation = False
+    is_logarithmic_color_map = False
+    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/mep/BrianDataAnalyze/Data/Partaking_Cells_Per_Synchronous_Event_Scope1.csv', delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/mep/BrianDataAnalyze/Data/Partaking_Cells_Per_Synchronous_Event_Scope2.csv', delimiter=',')    
+    total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
+    n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
+    
+    size = partaking_neurons_per_event_scope1.shape[0] + partaking_neurons_per_event_scope2.shape[0]
+    ratio = n_scope_1/size
+    correlation_score = np.zeros((size, size))
+
+    for i, first in enumerate(total_partaking):
+        for j, sec in enumerate(total_partaking):
+            events_shared = np.sum(np.logical_and(first, sec))
+            if events_shared >= threshold:
+                if is_plotting_autocorrelation or i != j:
+                    correlation_score[i, j] = events_shared
+    if is_logarithmic_color_map:
+        correlation_score = np.log(correlation_score)
+        current_cmap = cm.get_cmap()
+        current_cmap.set_bad(color='black')
+
+    # Obtaining list of cells sorted by correlation score
+    correlation_score_copy = np.copy(correlation_score) # Copy to not disrupt code downstream
+    ret = []
+    while True:
+        max_correlation_score = np.max(correlation_score_copy)
+        print(max_correlation_score)
+        if max_correlation_score < threshold:
+            break
+        mask = correlation_score_copy == max_correlation_score*np.ones_like(correlation_score_copy)
+        a = np.nonzero(mask)
+        ind = (a[0][0], a[1][0])
+        print(ind)
+        print('.')
+        ret.append((ind, max_correlation_score))
+        correlation_score_copy[ind] = 0
+
+    correlation_sum = np.sum(correlation_score, axis=1)
+    inds = [i[0] for i in sorted(zip(np.arange(0, len(correlation_sum)), correlation_sum), key=lambda x: x[1], reverse=True)]
+    l = [i for i in sorted(zip(correlation_score, correlation_sum), key=lambda x: x[1], reverse=True) if i[1] > 0]
+    inds = inds[:len(l)]
+    m = np.vstack([i[0] for i in l])
+    f, axes = plt.subplots(2, 1, sharex='col', gridspec_kw={'height_ratios': [ratio, 1-ratio]})
+    axes[0].imshow(m[:, :n_scope_1].T, aspect='auto')
+    axes[0].set_ylabel('Cerebellum cell number')
+    axes[1].imshow(m[:, n_scope_1:].T, aspect='auto')
+    axes[1].set_ylabel('Cortex cell number')
+    axes[1].set_xlabel('Cell number above threshold')
+
+    axes[1].set_xticks(np.arange(0, m.shape[0]))
+    axes[1].set_xticklabels(inds, rotation=45)
+    plt.xlim([0, 50])
+    plt.show()
+    return ret
+
 if __name__ == "__main__":
-    correlation_score_matrix_above_threshold()
+    r = sorted_correlation_score_matrix_above_threshold()
+    #print(r)
