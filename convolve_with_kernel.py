@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
+import os
 
 ### Free parameters ###
 width_sampling_frame_ground_truth_permutation = 1
@@ -55,7 +56,7 @@ def convolve_with_kernel(m):
     # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
     u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
     kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
-    t_axis = np.arange(0, 300, 0.001)
+    t_axis = np.arange(0, 1000, 0.001)
     t = np.zeros((m.shape[1], len(t_axis)))
     y = np.zeros_like(t)
     t += t_axis
@@ -159,7 +160,7 @@ def identify_patterns_two_samples(m_0, m_1):
         final[cells] = 1
         return final
 
-    n_samples = 2
+    n_samples = 1
     ground_0 = [make_permutation_based_ground_truth(m_0) for i in range(n_samples)]
     ground_1 = [make_permutation_based_ground_truth(m_1) for i in range(n_samples)]
     ground_0_r = [reshape(i, j.shape) if i.shape[0] < j.shape[0] else i for i, j in zip(ground_0, ground_1)]
@@ -180,6 +181,7 @@ def identify_patterns_two_samples(m_0, m_1):
     peak_data = convolve_with_kernel(np.concatenate([m_0_r, m_1_r], axis=1).T)
     peak_data_sorted = sorted(peak_data, key=lambda x: x[0])
     time_intervals_of_significance = [(i[2], i[3], i[0]) for i in peak_data_sorted if i[0] > min_area]
+    print(time_intervals_of_significance)
 
     involved_vectors = [get_cells_firing_between_ts(np.concatenate([m_0_r, m_1_r], axis=1).T, i[0], i[1]) for i in time_intervals_of_significance]
     involved_areas = [i[2] for i in time_intervals_of_significance]
@@ -191,10 +193,11 @@ def identify_patterns_two_samples(m_0, m_1):
     involved_matrix = np.hstack(involved_vectors)
     involved_matrix = np.vstack([np.array(involved_areas).T, involved_matrix])
 
-    first_signal = involved_matrix[:m_0.shape[1], :]
-    second_signal = involved_matrix[m_0.shape[1]:, :]
+    area_strengths = involved_matrix[0, :]
+    first_signal = involved_matrix[1:m_0.shape[1]+1, :]
+    second_signal = involved_matrix[m_0.shape[1]+1:, :]
     
-    return first_signal, second_signal
+    return area_strengths, first_signal, second_signal
 
     
 def plot_spectrum():
@@ -238,21 +241,41 @@ def helper(x):
     return identify_patterns_two_samples(x[0], x[1])
 
 def plot_n_neurons_involved():
-    file_name_cerebellum = 'Scope1_denoised_mc_results.csv'
-    file_name_cortex = 'Scope2_denoised_mc_results.csv'
-    shifts = np.arange(-4, 4.01, 0.05)
-    weight_factor_for_detecting_SPs = 1
-
-    m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
-    m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
-    l = [(m_cbl, m_ctx + shift) for shift in shifts]
-    with Pool(7) as p:
-        ll = p.map(helper, l)
-    spectra = [np.sum(np.sum(i[1:, :], axis=0)) + np.sum(np.sum(i[1:, :], axis=0)) for i, j in ll]
-    with open('output.txt', 'w') as f:
-        for i in spectra:
-            f.write(str(i))
-            f.write(', ')
+    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = list({i[3:] for i in files})
+    cortex_files = ['ctx' + i for i in files]
+    cerebellum_files = ['cbl' + i for i in files]
+    #for file_name_cortex, file_name_cerebellum in zip(cortex_files, cerebellum_files)
+    #m_cbl = np.loadtxt(file_name_cerebellum, delimiter=',')
+    #m_ctx = np.loadtxt(file_name_cortex, delimiter=',')
+    #ll = [helper(m_cbl, m_ctx))
+    #spectra = [np.sum(np.sum(i[1:, :], axis=0)) + np.sum(np.sum(i[1:, :], axis=0)) for i, j in ll]
+    #with open('output.txt', 'w') as f:
+    #    for i in spectra:
+    #        f.write(str(i))
+    #        f.write(', ')
 
 if __name__ == "__main__":
-    plot_n_neurons_involved()
+    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = list({i[3:] for i in files})
+    cortex_files = ['ctx' + i for i in files]
+    cerebellum_files = ['cbl' + i for i in files]
+    file_name_cortex = 'cbl_16082018_153856.csv'
+    file_name_cerebellum = 'ctx_16082018_153856.csv'
+    m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',')
+    sorted_areas = []
+    for i in range(20):
+        print(i)
+        m_ground = make_permutation_based_ground_truth(m_cbl)
+        l = convolve_with_kernel(m_ground)
+        areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
+        sorted_areas.extend(areas)
+    plt.hist(sorted_areas, label='Ground truth', facecolor=(1, 0, 0, 0.2), bins=50)
+    l = convolve_with_kernel(m_cbl)
+    areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
+    sorted_areas = np.sort(areas)
+    plt.hist(sorted_areas, label='Real data', facecolor=(0, 0, 1, 0.2), bins=50)
+    plt.legend()
+    plt.show()
+    
+

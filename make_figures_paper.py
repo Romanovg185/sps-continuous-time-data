@@ -4,14 +4,14 @@ from convolve_with_kernel import get_indices_significant_overlap, convolve_with_
 
 def main():
     def plot1():
-        scope1_raw = np.loadtxt('Scope1_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope1_raw.csv', delimiter=',') # sh[cell, ts]
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
         for i, el in enumerate(scope1_raw):
             plt.plot(timecourse, el + i, c='C0', lw=0.1)
         plt.show()
 
     def plot2():
-        scope1_raw = np.loadtxt('Scope1_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope1_raw.csv', delimiter=',') # sh[cell, ts]
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
         du2dt2 = (scope1_raw[:, :-2] - 2*scope1_raw[:, 1:-1] + scope1_raw[:, 2:])/(timecourse[1] - timecourse[0])
         for i in du2dt2:
@@ -22,11 +22,11 @@ def main():
     Plot all areas considered to be peaks. If the sum looks like a peak, but it is not shaded, the most likely hypothesis is that it is a summation of simple spikes (i.e. spikes not detected by FRI)
     """
     def plot3():
-        scope1_raw = np.loadtxt('Scope1_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope1_raw.csv', delimiter=',') # sh[cell, ts]
         scope1_sum = np.sum(scope1_raw, axis=0)
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
         plt.plot(timecourse, scope1_sum)
-        scope1_patterns = np.loadtxt('Scope1_denoised_mc_results.csv', delimiter=',')
+        scope1_patterns = np.loadtxt('Data/Scope1_denoised_mc_results.csv', delimiter=',')
         intervals = convolve_with_kernel(scope1_patterns)
         print(len(intervals))
         print(intervals)
@@ -36,10 +36,10 @@ def main():
         plt.show()
 
     def plot4():
-        scope1_raw = np.loadtxt('Scope1_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope1_raw.csv', delimiter=',') # sh[cell, ts]
         scope1_sum = np.sum(scope1_raw, axis=0)
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
-        scope1_patterns = np.loadtxt('Scope1_denoised_mc_results.csv', delimiter=',')
+        scope1_patterns = np.loadtxt('Data/Scope1_denoised_mc_results.csv', delimiter=',')
         plt.plot(timecourse, scope1_sum, label='Sum of 213 transients')
         intervals = get_indices_significant_overlap(scope1_patterns)
         for start, end in intervals:
@@ -52,10 +52,10 @@ def main():
         plt.show()
 
     def plot5():
-        scope1_raw = np.loadtxt('Scope1_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope1_raw.csv', delimiter=',') # sh[cell, ts]
         scope1_sum = np.sum(scope1_raw, axis=0)
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
-        scope1_patterns = np.loadtxt('Scope1_denoised_mc_results.csv', delimiter=',')
+        scope1_patterns = np.loadtxt('Data/Scope1_denoised_mc_results.csv', delimiter=',')
         intervals = get_indices_significant_overlap(scope1_patterns)
         fig = plt.figure()
         figure = fig.add_subplot(111)
@@ -75,10 +75,10 @@ def main():
         plt.show()
 
     def plot6():
-        scope1_raw = np.loadtxt('Scope2_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope2_raw.csv', delimiter=',') # sh[cell, ts]
         scope1_sum = np.sum(scope1_raw, axis=0)
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
-        scope1_patterns = np.loadtxt('Scope2_denoised_mc_results.csv', delimiter=',')
+        scope1_patterns = np.loadtxt('Data/Scope2_denoised_mc_results.csv', delimiter=',')
         intervals = get_indices_significant_overlap(scope1_patterns)
         fig = plt.figure()
         figure = fig.add_subplot(111)
@@ -99,10 +99,10 @@ def main():
     Plot matrices but not with events on x-axis, but ts
     """
     def plot7():
-        scope1_raw = np.loadtxt('Scope2_raw.csv', delimiter=',') # sh[cell, ts]
+        scope1_raw = np.loadtxt('Data/Scope2_raw.csv', delimiter=',') # sh[cell, ts]
         scope1_sum = np.sum(scope1_raw, axis=0)
         timecourse = 1/30*np.arange(scope1_raw.shape[1])
-        scope1_patterns = np.loadtxt('Scope2_denoised_mc_results.csv', delimiter=',')
+        scope1_patterns = np.loadtxt('Data/Scope2_denoised_mc_results.csv', delimiter=',')
         intervals = get_indices_significant_overlap(scope1_patterns)
         fig = plt.figure()
         figure = fig.add_subplot(111)
@@ -123,9 +123,13 @@ def main():
         plt.ylabel('Cell id')
         plt.show()
 
+    plot1()
+    plot2()
+    plot3()
+    plot4()
+    plot5()
+    plot6()
     plot7()
-
-
 
 if __name__ == "__main__":
     main()
