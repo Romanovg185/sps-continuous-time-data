@@ -255,27 +255,127 @@ def plot_n_neurons_involved():
     #        f.write(str(i))
     #        f.write(', ')
 
-if __name__ == "__main__":
+def plot_data_area_vs_ground_truth_area():
+    n_itr = 5
     files = os.popen('ls Data').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
-    file_name_cortex = 'cbl_16082018_153856.csv'
-    file_name_cerebellum = 'ctx_16082018_153856.csv'
-    m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',')
-    sorted_areas = []
-    for i in range(20):
-        print(i)
-        m_ground = make_permutation_based_ground_truth(m_cbl)
-        l = convolve_with_kernel(m_ground)
+    for file_name_cerebellum in cerebellum_files:
+        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',')
+        sorted_areas = []
+        for i in range(n_itr):
+            m_ground = make_permutation_based_ground_truth(m_cbl)
+            l = convolve_with_kernel(m_ground)
+            areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
+            sorted_areas.extend(areas)
+        ground_hist, ground_edges = np.histogram(areas, bins=50)
+        ground_hist = ground_hist/n_itr
+        ground_width = ground_edges[1:] - ground_edges[:-1]
+        ground_x = ground_edges[:-1] + ground_width/2
+        plt.bar(ground_x, ground_hist, ground_width, label='Ground truth', facecolor=(1, 0, 0, 0.2))
+        l = convolve_with_kernel(m_cbl)
         areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
-        sorted_areas.extend(areas)
-    plt.hist(sorted_areas, label='Ground truth', facecolor=(1, 0, 0, 0.2), bins=50)
-    l = convolve_with_kernel(m_cbl)
-    areas, amplitudes, onset_times, end_times = zip(*l) # From list of 4-tuples to 4 tuples
-    sorted_areas = np.sort(areas)
-    plt.hist(sorted_areas, label='Real data', facecolor=(0, 0, 1, 0.2), bins=50)
-    plt.legend()
-    plt.show()
-    
+        sorted_areas = np.sort(areas)
+        plt.hist(sorted_areas, label='Real data', facecolor=(0, 0, 1, 0.2), bins=50)
+        plt.legend()
+        ax = plt.gca()
+        ax.set_yscale('log')
+        plt.savefig(file_name_cerebellum + '_ground_v_truth.pdf')
+        plt.clf()
 
+"""
+Find indices of significant regions of firing pattern
+:param m_sample: Matrix of sample
+:param prob: Fraction of peaks to be an event
+:param minimum_peak_area: Size that a peak has to have to be considered an event
+###
+:returns: List of tuples of (begin, end) forall significant peaks
+"""
+def get_indices_arbitrary_overlap(m_sample, prob=1):
+    n_samples = 5 # Number of samples of ground truth
+    areas, amplitudes, starts, ends = zip(*convolve_with_kernel_two_sigma(m_sample))
+    minimum_peak_area = sorted(areas)[int(len(areas)*prob)]
+    left_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, starts))))
+    left_edges = [i[1] for i in left_edges]
+    right_edges = list(filter(lambda x: x[0] > minimum_peak_area, list(zip(areas, ends))))
+    right_edges = [i[1] for i in right_edges]
+    indices = list(zip(left_edges, right_edges))
+    indices = [(int(1000*i), int(1000*j)) for i, j in indices]
+    return indices
+
+"""
+Convolve with a Epanechnikov kernel
+NOTE: Time runs until 300s to assure that the kernel can nicely converge to 0 at the right edge
+:param m: Raw input spikes in a square matrix, padded with np.nans
+:param kernel_steepness: Parameter of kernel width
+:returns: A list of tuples of the [(peak_area[0], peak_amplitudes[0], peak_onset_time[0], peak_end_time[0]), ...]
+"""
+def convolve_with_kernel_two_sigma(m):
+    # Make a continuous (dt=0.001) sum of kernel-convolved spike onset times
+    u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
+    kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
+    t_axis = np.arange(0, 1000, 0.001)
+    t = np.zeros((m.shape[1], len(t_axis)))
+    y = np.zeros_like(t)
+    t += t_axis
+    for i in range(m.shape[1]): # with i as cell index
+        indices_of_spike = (m[:, i]/0.001).astype(int)
+        indices_of_spike_nonan = indices_of_spike[indices_of_spike >= 0]
+        y[i, indices_of_spike_nonan] = 1
+        y[i, :] = np.convolve(y[i, :], kernel, mode='same')
+        print('{}/{}'.format(i, m.shape[1]))
+    z = np.sum(y, axis=0)
+    mu = np.mean(z[z != 0])
+    sigma = np.std(z[z != 0])
+    threshold = mu + 2*sigma
+    plt.plot(z)
+    plt.plot(threshold*np.ones_like(z))
+    plt.plot(mu*np.ones_like(z))
+    plt.show()
+
+    # Indentify peaks as regions of z such that all values are 2sigma significantly above the mean, ending when a value lower than the mean is reached
+    peaks = [[]]
+    indices_peak_starts = []
+    indices_peak_ends = []
+    for index, i in enumerate(z):
+        if i < threshold:
+            if len(peaks[-1]) != 0:
+                indices_peak_ends.append(index)
+                peaks.append([])
+        else:
+            if len(peaks[-1]) == 0:
+                indices_peak_starts.append(index)
+            peaks[-1].append(i)
+    if len(peaks[-1]) == 0:
+        peaks = peaks[:-1]
+
+    # Obtaining returns
+    peak_areas = [0.001*sum(i) for i in peaks]
+    times_peak_starts = [0.001*(i-1) for i in indices_peak_starts]
+    times_peak_ends = [0.001*(i-1) for i in indices_peak_ends]
+    peak_amplitudes = [np.max(i) for i in peaks]
+    return list(zip(peak_areas, peak_amplitudes, times_peak_starts, times_peak_ends))
+
+
+def main():
+    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = list({i[3:] for i in files})
+    cortex_files = ['ctx' + i for i in files]
+    cerebellum_files = ['cbl' + i for i in files]
+    for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
+        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',')
+        m_ctx = np.loadtxt('Data/' + file_name_cortex, delimiter=',')
+        while m_cbl.shape[0] < m_ctx.shape[0]:
+            to_stack = np.full((m_cbl.shape[1], 1), np.nan).T
+            m_cbl = np.vstack([m_cbl, to_stack])
+        while m_cbl.shape[0] > m_ctx.shape[0]:
+            to_stack = np.full((m_ctx.shape[1], 1), np.nan).T
+            m_ctx = np.vstack([m_ctx, to_stack])
+        m_tot = np.hstack([m_cbl, m_ctx])
+        print(m_tot.shape)
+        i = get_indices_arbitrary_overlap(m_tot)
+        #print([1/1000*(h[1] - h[0]) for h in i])
+
+if __name__ == "__main__":
+    main()
