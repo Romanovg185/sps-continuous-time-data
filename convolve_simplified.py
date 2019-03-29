@@ -101,13 +101,13 @@ def locate_indices_neuron_per_pattern(m_sample):
     return ind, z.T
 
 
-def main():
+def find_participants_both():
     files = os.popen('ls Data').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
     for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
-        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',')
+        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',') # [event, cell]
         m_ctx = np.loadtxt('Data/' + file_name_cortex, delimiter=',')
         while m_cbl.shape[0] < m_ctx.shape[0]:
             to_stack = np.full((m_cbl.shape[1], 1), np.nan).T
@@ -116,11 +116,15 @@ def main():
             to_stack = np.full((m_ctx.shape[1], 1), np.nan).T
             m_ctx = np.vstack([m_ctx, to_stack])
         m_tot = np.hstack([m_cbl, m_ctx])
-        i, participators = locate_indices_neuron_per_pattern(m_tot)
-        i = np.array(i)
-        
-        np.savetxt('participating_neurons' + file_name_cortex[11:], participators, delimiter=',')
-        np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], i, delimiter=',')
+        i, participators = locate_indices_neuron_per_pattern(m_tot) # [cell, significant_event]
+
+        # Splitting cortex and cerebellum
+        part_cbl = participators[:m_cbl.shape[1], :]
+        part_ctx = participators[m_cbl.shape[1]:, :]
+        np.savetxt('cbl_participating_neurons' + file_name_cortex[11:], part_cbl, delimiter=',')
+        np.savetxt('ctx_participating_neurons' + file_name_cortex[11:], part_ctx, delimiter=',')
+        np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], np.array(i), delimiter=',')
+        return
 
 if __name__ == "__main__":
-    main()
+    find_participants_both()
