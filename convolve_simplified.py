@@ -27,6 +27,7 @@ def convolve_with_kernel_two_sigma(m):
         indices_of_spike_nonan = indices_of_spike[indices_of_spike >= 0]
         y[i, indices_of_spike_nonan] = 1
         y[i, :] = np.convolve(y[i, :], kernel, mode='same')
+        print('{}/{}'.format(i+1, m.shape[1]))
     z = np.sum(y, axis=0)
     mu = np.mean(z[z != 0])
     sigma = np.std(z[z != 0])
@@ -67,7 +68,6 @@ def get_indices_arbitrary_overlap(m_sample, prob=1):
     n_samples = 5 # Number of samples of ground truth
     areas, amplitudes, starts, ends = zip(*convolve_with_kernel_two_sigma(m_sample))
     indices = list(zip(starts, ends))
-    print(indices)
     
     ## Stored if I want to filter even more
     #minimum_peak_area = sorted(areas)[int(len(areas)*prob)]
@@ -94,7 +94,6 @@ def locate_indices_neuron_per_pattern(m_sample):
             left_of_end = cell < end
             if np.any(np.logical_and(left_of_end, right_of_start)):
                 single_pattern.append(i)
-        print(single_pattern)
         patterns.append(tuple(single_pattern))
     z = np.zeros((len(ind), m_sample.shape[1])) #z[event, cell_partaking]
     for i, cells in enumerate(patterns):
@@ -117,9 +116,11 @@ def main():
             to_stack = np.full((m_ctx.shape[1], 1), np.nan).T
             m_ctx = np.vstack([m_ctx, to_stack])
         m_tot = np.hstack([m_cbl, m_ctx])
-        participators, i = locate_indices_neuron_per_pattern(m_tot)
-        np.savetxt(cortex_files + 'patterns.csv', participators, delimiter=',')
-        np.savetxt(cortex_files + 'intervals_significant_correlation.csv', i, delimiter=',')
+        i, participators = locate_indices_neuron_per_pattern(m_tot)
+        i = np.array(i)
+        
+        np.savetxt('participating_neurons' + file_name_cortex[11:], participators, delimiter=',')
+        np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], i, delimiter=',')
 
 if __name__ == "__main__":
     main()
