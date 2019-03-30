@@ -86,6 +86,7 @@ Obtain all neurons that possibly could be part of the pattern
 """
 def locate_indices_neuron_per_pattern(m_sample):
     ind = get_indices_arbitrary_overlap(m_sample)
+    print("Indices generated")
     patterns = []
     for start, end in ind:
         single_pattern = []
@@ -116,6 +117,8 @@ def find_participants_both():
             to_stack = np.full((m_ctx.shape[1], 1), np.nan).T
             m_ctx = np.vstack([m_ctx, to_stack])
         m_tot = np.hstack([m_cbl, m_ctx])
+        print("Read in correctly")
+        print(m_tot.shape)
         i, participators = locate_indices_neuron_per_pattern(m_tot) # [cell, significant_event]
 
         # Splitting cortex and cerebellum
@@ -124,7 +127,6 @@ def find_participants_both():
         np.savetxt('cbl_participating_neurons' + file_name_cortex[11:], part_cbl, delimiter=',')
         np.savetxt('ctx_participating_neurons' + file_name_cortex[11:], part_ctx, delimiter=',')
         np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], np.array(i), delimiter=',')
-        return
 
 if __name__ == "__main__":
     find_participants_both()
