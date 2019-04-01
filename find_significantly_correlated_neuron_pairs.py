@@ -6,10 +6,9 @@ from matplotlib import cm
 """
 Plots a line that shows the number of shared events per neuron pair
 """
-def number_of_pairs_per_threshold():
-    
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/Data/Partaking_Cells_Per_Synchronous_Event_Scope1.csv', delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/Data/Partaking_Cells_Per_Synchronous_Event_Scope2.csv', delimiter=',')    
+def number_of_pairs_per_threshold(path_ctx):
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -87,12 +86,12 @@ Plots the pairwise shared number of significant correlation events per neuron pa
 A neuron (column/row) is filtered out if there is no other neuron with which it shares more than threshold firing events
 :param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
 """
-def correlation_score_matrix_above_threshold(threshold=2):
+def correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/cbl_participating_neurons_16082018_121719.csv', delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/ctx_participating_neurons_16082018_121719.csv', delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -145,11 +144,11 @@ A neuron (column/row) is filtered out if there is no other neuron with which it 
 :param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
 :returns: List of [((cell, cell), correlation_score)] sorted by correlation score
 """
-def sorted_correlation_score_matrix_above_threshold(threshold=1):
+def sorted_correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/cbl_participating_neurons_16082018_121719.csv', delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/ctx_participating_neurons_16082018_121719.csv', delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -211,12 +210,12 @@ A neuron (column/row) is filtered out if there is no other neuron with which it 
 :param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
 :returns: List of [((cell, cell), correlation_score)] sorted by correlation score
 """
-def double_sorted_correlation_score_matrix_above_threshold(threshold=2):
+def double_sorted_correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/cbl_participating_neurons_16082018_121719.csv', delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/ctx_participating_neurons_16082018_121719.csv', delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -289,5 +288,5 @@ def double_sorted_correlation_score_matrix_above_threshold(threshold=2):
     return ret
 
 if __name__ == "__main__":
-    r = correlation_score_matrix_above_threshold()
+    correlation_score_matrix_above_threshold('ctx_participating_neurons_16082018_162452.csv')
     #print(r)

@@ -102,7 +102,7 @@ def locate_indices_neuron_per_pattern(m_sample):
     return ind, z.T
 
 
-def find_participants_both():
+def find_participants_both(is_thresholding=False):
     files = os.popen('ls Data').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
@@ -118,7 +118,6 @@ def find_participants_both():
             m_ctx = np.vstack([m_ctx, to_stack])
         m_tot = np.hstack([m_cbl, m_ctx])
         print("Read in correctly")
-        print(m_tot.shape)
         i, participators = locate_indices_neuron_per_pattern(m_tot) # [cell, significant_event]
 
         # Splitting cortex and cerebellum
@@ -128,5 +127,38 @@ def find_participants_both():
         np.savetxt('ctx_participating_neurons' + file_name_cortex[11:], part_ctx, delimiter=',')
         np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], np.array(i), delimiter=',')
 
+def convolve_and_write():
+    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = list({i[3:] for i in files})
+    cortex_files = ['ctx' + i for i in files]
+    cerebellum_files = ['cbl' + i for i in files]
+    for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
+        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',') # [event, cell]
+        m_ctx = np.loadtxt('Data/' + file_name_cortex, delimiter=',')
+        while m_cbl.shape[0] < m_ctx.shape[0]:
+            to_stack = np.full((m_cbl.shape[1], 1), np.nan).T
+            m_cbl = np.vstack([m_cbl, to_stack])
+        while m_cbl.shape[0] > m_ctx.shape[0]:
+            to_stack = np.full((m_ctx.shape[1], 1), np.nan).T
+            m_ctx = np.vstack([m_ctx, to_stack])
+        m_tot = np.hstack([m_cbl, m_ctx])
+        print("Read in correctly")
+
+        m = m_tot
+        u = np.arange(-1*kernel_steepness, kernel_steepness + 0.001, 0.001)
+        kernel = 4*kernel_steepness/3*(1 - (u/kernel_steepness)**2)
+        t_axis = np.arange(0, 1000, 0.001)
+        t = np.zeros((m.shape[1], len(t_axis)))
+        y = np.zeros_like(t)
+        t += t_axis
+        for i in range(m.shape[1]): # with i as cell index
+            indices_of_spike = (m[:, i]/0.001).astype(int)
+            indices_of_spike_nonan = indices_of_spike[indices_of_spike >= 0]
+            y[i, indices_of_spike_nonan] = 1
+            y[i, :] = np.convolve(y[i, :], kernel, mode='same')
+            print('{}/{}'.format(i+1, m.shape[1]))
+        z = np.sum(y, axis=0)
+        np.savetxt('total_kernel_sum' + file_name_cortex[11:], z, delimiter=',')
+
 if __name__ == "__main__":
-    find_participants_both()
+    convolve_and_write()
