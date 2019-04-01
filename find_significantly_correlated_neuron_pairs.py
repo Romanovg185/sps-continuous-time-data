@@ -91,8 +91,8 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -199,8 +199,8 @@ def double_sorted_correlation_score_matrix_above_threshold(path_ctx, threshold=1
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/continous-time-sp-detection/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
@@ -273,7 +273,7 @@ def double_sorted_correlation_score_matrix_above_threshold(path_ctx, threshold=1
     
     return ret
 
-if __name__ == "__main__":
+def export_four_box_plots():
     files = os.popen('ls SynchronousEventParticipatingNeurons').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
@@ -303,3 +303,5 @@ if __name__ == "__main__":
         plt.savefig('four_box_plot' + file_name_cerebellum[24:-3] + '.eps')
         np.savetxt('four_box_data' + file_name_cerebellum[24:], z_tot, delimiter=',')
 
+if __name__ == "__main__":
+    export_four_box_plots()
