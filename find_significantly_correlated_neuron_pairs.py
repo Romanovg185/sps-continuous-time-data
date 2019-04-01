@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from matplotlib import cm
+import os
 
 """
 Plots a line that shows the number of shared events per neuron pair
@@ -114,29 +115,13 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     scope1_valid = np.sum(sum_of_correlations > 0) # Number of true columns in the cerebellum
     correlation_score = correlation_score[~np.all(correlation_score == 0, axis=1)]
     correlation_score = correlation_score[:, ~np.all(correlation_score == 0, axis=0)]
-    f, axes = plt.subplots(2, 2, sharey='row', sharex='col', gridspec_kw={'width_ratios': [ratio, 1-ratio], 'height_ratios': [ratio, 1-ratio]})
-    m = correlation_score[:scope1_valid, :scope1_valid]
-    axes[0, 0].imshow(m, aspect='auto')
-    axes[0, 0].xaxis.tick_top()
-    axes[0, 0].set_ylabel('Cerebellum')
-    axes[0, 0].set_xlabel('Cerebellum')
-    axes[0, 0].xaxis.set_label_position('top')
 
-    m = correlation_score[:scope1_valid, scope1_valid:]
-    axes[0, 1].imshow(m, aspect='auto')
-    axes[0, 1].xaxis.tick_top()
-    axes[0, 1].set_xlabel('Cortex')
-    axes[0, 1].xaxis.set_label_position('top')
+    # Writing
+    z_top = np.hstack([correlation_score[:scope1_valid, :scope1_valid], np.full((scope1_valid, 1), np.nan), correlation_score[:scope1_valid, scope1_valid:]])
+    z_bot = np.hstack([correlation_score[scope1_valid:, :scope1_valid], np.full((correlation_score.shape[0] - scope1_valid, 1), np.nan), correlation_score[scope1_valid:, scope1_valid:]])
+    z_tot = np.vstack([z_top, np.full((1, correlation_score.shape[0] + 1), np.nan), z_bot])
+    return z_tot, correlation_score, ratio, scope1_valid
     
-    m = correlation_score[scope1_valid:, :scope1_valid]
-    axes[1, 0].imshow(m, aspect='auto')
-    axes[1, 0].set_ylabel('Cortex')
-
-    m = correlation_score[scope1_valid:, scope1_valid:]
-    axes[1, 1].imshow(m, aspect='auto')
-
-    plt.show()
-
 
 """
 Plots the pairwise shared number of significant correlation events per neuron pair.
@@ -285,8 +270,36 @@ def double_sorted_correlation_score_matrix_above_threshold(path_ctx, threshold=1
     axes[0, 0].set_xlim([0, 25])
     plt.xlim([0, 25])
     plt.show()
+    
     return ret
 
 if __name__ == "__main__":
-    correlation_score_matrix_above_threshold('ctx_participating_neurons_16082018_162452.csv')
-    #print(r)
+    files = os.popen('ls SynchronousEventParticipatingNeurons').read().split('\n')[:-1]
+    files = list({i[3:] for i in files})
+    cortex_files = ['ctx' + i for i in files]
+    cerebellum_files = ['cbl' + i for i in files]
+    for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
+        z_tot, correlation_score, ratio, scope1_valid = correlation_score_matrix_above_threshold(file_name_cortex)
+        f, axes = plt.subplots(2, 2, sharey='row', sharex='col', gridspec_kw={'width_ratios': [ratio, 1-ratio], 'height_ratios': [ratio, 1-ratio]})
+        m = correlation_score[:scope1_valid, :scope1_valid]
+        axes[0, 0].imshow(m, aspect='auto')
+        axes[0, 0].xaxis.tick_top()
+        axes[0, 0].set_ylabel('Cerebellum')
+        axes[0, 0].set_xlabel('Cerebellum')
+        axes[0, 0].xaxis.set_label_position('top')
+
+        m = correlation_score[:scope1_valid, scope1_valid:]
+        axes[0, 1].imshow(m, aspect='auto')
+        axes[0, 1].xaxis.tick_top()
+        axes[0, 1].set_xlabel('Cortex')
+        axes[0, 1].xaxis.set_label_position('top')
+        
+        m = correlation_score[scope1_valid:, :scope1_valid]
+        axes[1, 0].imshow(m, aspect='auto')
+        axes[1, 0].set_ylabel('Cortex')
+
+        m = correlation_score[scope1_valid:, scope1_valid:]
+        axes[1, 1].imshow(m, aspect='auto')
+        plt.savefig('four_box_plot' + file_name_cerebellum[24:-3] + '.eps')
+        np.savetxt('four_box_data' + file_name_cerebellum[24:], z_tot, delimiter=',')
+
