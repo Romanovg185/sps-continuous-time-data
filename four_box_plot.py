@@ -9,13 +9,14 @@ Plots the pairwise shared number of significant correlation events per neuron pa
 A neuron (column/row) is filtered out if there is no other neuron with which it shares more than threshold firing events
 :param threshold: Minimum number of shared events between a neuron and an arbitrary other neuron to not be filtered out
 """
-def correlation_score_matrix_above_threshold(path_ctx, threshold=1):
+def correlation_score_matrix_above_threshold(path_ctx, threshold=0):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
     partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/mep/ContinuousGlobalSynchony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/mep/ContinuousGlobalSynchony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
+    print(total_partaking.shape)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
     size = partaking_neurons_per_event_scope1.shape[0] + partaking_neurons_per_event_scope2.shape[0]
@@ -35,8 +36,9 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=1):
     
     sum_of_correlations = np.sum(correlation_score[:n_scope_1], axis=1)
     scope1_valid = np.sum(sum_of_correlations > 0) # Number of true columns in the cerebellum
-    correlation_score = correlation_score[~np.all(correlation_score == 0, axis=1)]
-    correlation_score = correlation_score[:, ~np.all(correlation_score == 0, axis=0)]
+    print(correlation_score.shape)
+    #correlation_score = correlation_score[~np.all(correlation_score == 0, axis=1)]
+    #correlation_score = correlation_score[:, ~np.all(correlation_score == 0, axis=0)]
 
     # Writing
     z_top = np.hstack([correlation_score[:scope1_valid, :scope1_valid], np.full((scope1_valid, 1), np.nan), correlation_score[:scope1_valid, scope1_valid:]])
@@ -71,7 +73,7 @@ def export_four_box_plots():
 
         m = correlation_score[scope1_valid:, scope1_valid:]
         axes[1, 1].imshow(m, aspect='auto')
-        plt.savefig('four_box_plot' + file_name_cerebellum[24:-3] + '.eps')
+        plt.savefig('four_box_plot' + file_name_cerebellum[24:-3] + 'eps')
         np.savetxt('four_box_data' + file_name_cerebellum[24:], z_tot, delimiter=',')
 
 if __name__ == "__main__":

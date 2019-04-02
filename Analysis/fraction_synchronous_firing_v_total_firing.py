@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 def get_native_firing_frequency_per_cell(filename=''):
     ctx_onset_times = np.loadtxt('ctx_results{}.csv'.format(filename), delimiter=',')
     cbl_onset_times = np.loadtxt('cbl_results{}.csv'.format(filename), delimiter=',')
+    print(ctx_onset_times.shape)
+    print(cbl_onset_times.shape)
     t_max_ctx = np.nanmax(ctx_onset_times)
     t_max_cbl = np.nanmax(cbl_onset_times)
     t_max = t_max_ctx if t_max_ctx > t_max_cbl else t_max_cbl
@@ -16,6 +18,8 @@ def get_native_firing_frequency_per_cell(filename=''):
 def get_synchronous_firing_frequency_per_cell(t_max, filename=''):
     ctx_participants = np.loadtxt('ctx_participating_neurons{}.csv'.format(filename), delimiter=',')
     cbl_participants = np.loadtxt('cbl_participating_neurons{}.csv'.format(filename), delimiter=',')
+    print(ctx_participants.shape)
+    print(cbl_participants.shape)
     fstar_ctx = np.sum(ctx_participants, axis=1)/t_max
     fstar_cbl = np.sum(cbl_participants, axis=1)/t_max
     return fstar_ctx, fstar_cbl
