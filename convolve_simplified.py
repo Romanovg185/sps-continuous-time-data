@@ -101,15 +101,17 @@ def locate_indices_neuron_per_pattern(m_sample):
         z[i, cells] = 1
     return ind, z.T
 
-
+"""
+Make a rectangular matrix for cerebellar and cortical data that contains the cells firing inside a single synchronous event
+"""
 def find_participants_both():
-    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = os.popen('ls FRIOnsetTimes').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
     for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
-        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',') # [event, cell]
-        m_ctx = np.loadtxt('Data/' + file_name_cortex, delimiter=',')
+        m_cbl = np.loadtxt('FRIOnsetTimes/' + file_name_cerebellum, delimiter=',') # [event, cell]
+        m_ctx = np.loadtxt('FRIOnsetTimes/' + file_name_cortex, delimiter=',')
         while m_cbl.shape[0] < m_ctx.shape[0]:
             to_stack = np.full((m_cbl.shape[1], 1), np.nan).T
             m_cbl = np.vstack([m_cbl, to_stack])

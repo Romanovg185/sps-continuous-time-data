@@ -1,0 +1,20 @@
+Figures:
+EPS of 4-box plots.
+The individual EPS are scaled individually, so unable to compare color hues.
+Cerebellum and cortex are placed on individual boxes.
+
+FRIOnsetTimes:
+Each column represents a cell.
+Every row corresponds to a single inferred complex spiking event.
+NaN padded to be rectangular.
+
+IntervalsSignificantCorrelation:
+First column contains start time in seconds of an event that is considered p<0.05 significant.
+Second column contains end times.
+
+SynchronousEventParticipatingNeurons:
+Columns represent synchronouse events, i.e. time intervals where the kernel-sum is 2sigma above the mean.
+Rows represent cells.
+A 1 is placed if this cell fires in the corresponding synchronous event.
+The absolute time intervals in seconds are stored in IntervalsSignificantCorrelation
+
