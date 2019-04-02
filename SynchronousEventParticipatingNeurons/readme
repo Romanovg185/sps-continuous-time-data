@@ -1,6 +1,0 @@
-SynchronousEventParticipatingNeurons:
-Columns represent synchronouse events, i.e. time intervals where the kernel-sum is 2sigma above the mean.
-Rows represent cells.
-A 1 is placed if this cell fires in the corresponding synchronous event.
-The absolute time intervals in seconds are stored in IntervalsSignificantCorrelation
-
