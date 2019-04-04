@@ -101,17 +101,11 @@ def locate_indices_neuron_per_pattern(m_sample):
         z[i, cells] = 1
     return ind, z.T
 
-<<<<<<< HEAD
 """
 Make a rectangular matrix for cerebellar and cortical data that contains the cells firing inside a single synchronous event
 """
-def find_participants_both():
-    files = os.popen('ls FRIOnsetTimes').read().split('\n')[:-1]
-=======
-
 def find_participants_both(is_thresholding=False):
-    files = os.popen('ls Data').read().split('\n')[:-1]
->>>>>>> b2b50e3bf688ca21385aaa44df9cb62ffa3eddbd
+    files = os.popen('ls FRIOnsetTimes').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
@@ -136,13 +130,13 @@ def find_participants_both(is_thresholding=False):
         np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], np.array(i), delimiter=',')
 
 def convolve_and_write():
-    files = os.popen('ls Data').read().split('\n')[:-1]
+    files = os.popen('ls FRIOnsetTimes').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
     for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
-        m_cbl = np.loadtxt('Data/' + file_name_cerebellum, delimiter=',') # [event, cell]
-        m_ctx = np.loadtxt('Data/' + file_name_cortex, delimiter=',')
+        m_cbl = np.loadtxt('FRIOnsetTimes/' + file_name_cerebellum, delimiter=',') # [event, cell]
+        m_ctx = np.loadtxt('FRIOnsetTimes/' + file_name_cortex, delimiter=',')
         while m_cbl.shape[0] < m_ctx.shape[0]:
             to_stack = np.full((m_cbl.shape[1], 1), np.nan).T
             m_cbl = np.vstack([m_cbl, to_stack])
@@ -169,4 +163,4 @@ def convolve_and_write():
         np.savetxt('total_kernel_sum' + file_name_cortex[11:], z, delimiter=',')
 
 if __name__ == "__main__":
-    convolve_and_write()
+    find_participants_both()

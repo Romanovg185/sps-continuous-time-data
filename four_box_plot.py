@@ -13,8 +13,8 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=0):
     is_plotting_autocorrelation = False
     is_logarithmic_color_map = False
     
-    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/mep/ContinuousGlobalSynchony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
-    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/mep/ContinuousGlobalSynchony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
+    partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/ContinuousGlobalSynchrony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
+    partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/ContinuousGlobalSynchrony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
     total_partaking = np.vstack([partaking_neurons_per_event_scope1, partaking_neurons_per_event_scope2]).astype(bool)
     print(total_partaking.shape)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
