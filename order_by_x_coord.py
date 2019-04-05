@@ -35,14 +35,23 @@ def order(filename):
         fri_data_ordered[:, val] = fri_data[:, key]
     np.savetxt('/home/romano/Documents/ContinuousGlobalSynchrony/FRIOnsetTimesOrdered/{}.csv'.format(filename), fri_data_ordered, delimiter=',')
 
+def order_transients(filename):
+    masks = load_mask_to_3d_matrix('/home/romano/mep/ContinuousGlobalSynchrony/Masks/masks_{}.npz'.format(filename))
+    ordering = determine_ordering(masks)
+    transient_data = np.loadtxt('/home/romano/mep/TemporalHyperaccuity/hyperaccuity_input/{}.csv'.format(filename), delimiter=',')
+    transient_data_ordered = transient_data.copy()
+    for key, val in ordering.items():
+        transient_data_ordered[:, val] = transient_data[:, key]
+    np.savetxt('/home/romano/mep/ContinuousGlobalSynchrony/TransientsSorted/{}.csv'.format(filename), transient_data_ordered, delimiter=',')
+
 def main():
-    l = os.popen('ls /home/romano/Documents/ContinuousGlobalSynchrony/Masks').read()
+    l = os.popen('ls /home/romano/mep/ContinuousGlobalSynchrony/Masks').read()
     l = l.split('\n')[:-1]
     l = [i[6:-4] for i in l]
     cbl = []
     ctx = []
     for i in l:
-        order(i)
+        order_transients(i)
 
 if __name__ == '__main__':
     main()
