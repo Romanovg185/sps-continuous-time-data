@@ -36,8 +36,8 @@ def main():
         names.extend('Ctx{}'.format(i - n_cbl) for i in indices_used if i > n_cbl)
         groups = [1 for i in indices_used if i < n_cbl]
         groups.extend(2 for i in indices_used if i > n_cbl)
-        colors = ['#BEBADA' for i in indices_used if i < n_cbl]
-        colors.extend('#929292' for i in indices_used if i > n_cbl)
+        colors = [fill_color_cbl for i in indices_used if i < n_cbl]
+        colors.extend(fill_color_ctx for i in indices_used if i > n_cbl)
         borders = ['#aba7c4' for _ in indices_used]
 
         my_graph = nx.Graph()
@@ -62,14 +62,16 @@ def main():
             else:
                 second = 'Ctx{}'.format(i[1] - n_cbl)
             index_named.append((first, second))
-            weights.append(int(m[tuple(i)]))
+        if first[:3] == first[:3]:
+            weights.append(int(m[i[0], i[1]]))
+        else:
+            weights.append(int(0))
         for index in index_named:
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
 
-        nx.write_gml(my_graph, '/home/romano/mep/ContinuousGlobalSynchrony/autogen.gml')
-        return
+        nx.write_gml(my_graph, '/home/romano/mep/ContinuousGlobalSynchrony/Graphs/{}_same_only.gml'.format(filename[:-4]))
 
 
 main()
