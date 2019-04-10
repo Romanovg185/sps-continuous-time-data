@@ -1,9 +1,23 @@
 library(dplyr)
 library(igraph)
 library(arcdiagram)
+library(hashmap)
 # EDGE DOES NOT REFER TO ID, BUT TO NODE POSITION!!!
-mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/autogen.gml", format="gml")
-#mis_graph =  read.graph("/home/romano/mep/ContinuousGlobalSynchrony/lesmiserables.gml", format="gml")
+
+mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/scale_degree.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/1_4000_fr_16082018_161839_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_120304_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_121719_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_123148_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_131530_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_132308_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_132838_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_152235_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_152829_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_153856_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_161337_cross.gml", format="gml")
+#mis_graph = read.graph("/home/romano/mep/ContinuousGlobalSynchrony/Graphs/16082018_162452_cross.gml", format="gml")
+
 edgelist = get.edgelist(mis_graph)
 node_ordering <- graph_info(edgelist)$nodes
 real_ordering <- graph_info(edgelist)$aux_ord
@@ -48,23 +62,13 @@ dregrees <- degrees
 for(i in 1:length(degrees)){
 dregrees[mappy[[i]]] = degrees[i]
 }
-# WORKS for now
-#q <- arcplot(edgelist, labels=vrlabels, cex.labels=0.8,
-#        show.nodes=TRUE, col.nodes=vborders, bg.nodes=vrfill,
-#        cex.nodes = log(dregrees)+0.5, pch.nodes=21,
-#        lwd.nodes = 2, line=-0.5,
-#        col.arcs = hsv(0, 0, 0.2, 0.25), lwd.arcs = 1.5 * vralues)
-#arcplot(edgelist, labels=vlabels, cex.labels=0.8,
-#        show.nodes=TRUE, col.nodes=vborders, bg.nodes=vfill,
-#        cex.nodes = log(degrees)+0.5, pch.nodes=21,
-#        lwd.nodes = 2, line=-0.5,
-#        col.arcs = hsv(0, 0, 0.2, 0.25), lwd.arcs = 1.5 * values)
+
 # data frame with node attributes
 x = data.frame(vrgroups, dregrees, vrlabels, ind=1:vcount(mis_graph))
 y = arrange(x, desc(vrgroups), desc(dregrees))
 new_ord = y$ind
 arcplot(edgelist, ordering=new_ord, labels=vrlabels, cex.labels=0.8,
-show.nodes=TRUE, col.nodes=vrborders, bg.nodes=vrfill,
-cex.nodes = log(dregrees)+0.5, pch.nodes=21,
-lwd.nodes = 2, line=0,
-col.arcs = hsv(0, 0, 0.2, 0.25), lwd.arcs = 1.5 * vralues)
+        show.nodes=TRUE, col.nodes=vrborders, bg.nodes=vrfill,
+        cex.nodes = log(dregrees)+0.5, pch.nodes=21,
+        lwd.nodes = 2, line=0,
+        col.arcs = hsv(0, 0, 0.2, 0.25), lwd.arcs = 0.2 * values^2)

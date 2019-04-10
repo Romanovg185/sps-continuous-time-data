@@ -1,324 +1,324 @@
 graph [
   node [
     id 0
-    label "Cbl0"
+    label "Cbl1"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 1
-    label "Cbl1"
+    label "Cbl2"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 2
-    label "Cbl2"
+    label "Cbl3"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 3
-    label "Cbl3"
+    label "Cbl4"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 4
-    label "Cbl5"
+    label "Cbl6"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 5
-    label "Cbl6"
+    label "Cbl7"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 6
-    label "Cbl8"
+    label "Cbl9"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 7
-    label "Cbl12"
+    label "Cbl13"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 8
-    label "Cbl16"
+    label "Cbl17"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 9
-    label "Cbl17"
+    label "Cbl18"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 10
-    label "Cbl18"
+    label "Cbl19"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 11
-    label "Cbl19"
+    label "Cbl20"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 12
-    label "Cbl22"
+    label "Cbl23"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 13
-    label "Cbl23"
+    label "Cbl24"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 14
-    label "Cbl24"
+    label "Cbl25"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 15
-    label "Cbl25"
+    label "Cbl26"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 16
-    label "Cbl31"
+    label "Cbl32"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 17
-    label "Cbl32"
+    label "Cbl33"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 18
-    label "Cbl34"
+    label "Cbl35"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 19
-    label "Cbl35"
+    label "Cbl36"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 20
-    label "Cbl37"
+    label "Cbl38"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 21
-    label "Cbl38"
+    label "Cbl39"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 22
-    label "Cbl41"
+    label "Cbl42"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 23
-    label "Cbl42"
+    label "Cbl43"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 24
-    label "Cbl43"
+    label "Cbl44"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 25
-    label "Cbl45"
+    label "Cbl46"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 26
-    label "Cbl47"
+    label "Cbl48"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 27
-    label "Cbl49"
+    label "Cbl50"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 28
-    label "Cbl50"
+    label "Cbl51"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 29
-    label "Cbl51"
+    label "Cbl52"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 30
-    label "Cbl54"
+    label "Cbl55"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 31
-    label "Cbl55"
+    label "Cbl56"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 32
-    label "Cbl56"
+    label "Cbl57"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 33
-    label "Cbl58"
+    label "Cbl59"
     group 1
-    fill "#ED0304"
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 34
-    label "Ctx14"
+    label "Ctx15"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 35
-    label "Ctx15"
+    label "Ctx16"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 36
-    label "Ctx16"
+    label "Ctx17"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 37
-    label "Ctx23"
+    label "Ctx24"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 38
-    label "Ctx38"
+    label "Ctx39"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 39
-    label "Ctx65"
+    label "Ctx66"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 40
-    label "Ctx76"
+    label "Ctx77"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 41
-    label "Ctx120"
+    label "Ctx121"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 42
-    label "Ctx144"
+    label "Ctx145"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 43
-    label "Ctx147"
+    label "Ctx148"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 44
-    label "Ctx163"
+    label "Ctx164"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 45
-    label "Ctx166"
+    label "Ctx167"
     group 2
-    fill "#04C3d4"
+    fill "#634289"
     border "#aba7c4"
   ]
   edge [

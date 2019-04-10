@@ -6,8 +6,8 @@ import networkx as nx
 def main():
     l = os.popen("ls FourBoxRawData").read().split('\n')
     l = ["/home/romano/mep/ContinuousGlobalSynchrony/FourBoxRawData/" + i for i in l[:-1]]
-    fill_color_cbl = "#ED0304"
-    fill_color_ctx = "#04C3d4"
+    fill_color_cbl = "#872a0e"
+    fill_color_ctx = "#634289"
     threshold = 5
     for path in l:
         m = np.loadtxt(path, delimiter=',')
@@ -17,7 +17,6 @@ def main():
         m_cblctx = m[n_cbl+1:, :n_cbl]
         m_ctxctx = m[n_cbl+1:, n_cbl+1:]
         filename = path[73:-4] + ".gml"
-        print(filename)
         # Fixing matrices
         m = np.zeros((m.shape[0] - 1, m.shape[1] - 1))
         m[:n_cbl, :n_cbl] = m_cblcbl
@@ -32,12 +31,12 @@ def main():
             indices_used.add(i[0])
             indices_used.add(i[1])
         indices_used = sorted(list(indices_used))
-        names = ['Cbl{}'.format(i) for i in indices_used if i < n_cbl]
-        names.extend('Ctx{}'.format(i - n_cbl) for i in indices_used if i > n_cbl)
+        names = ['Cbl{}'.format(i+1) for i in indices_used if i < n_cbl]
+        names.extend('Ctx{}'.format(i+1 - n_cbl) for i in indices_used if i >= n_cbl)
         groups = [1 for i in indices_used if i < n_cbl]
-        groups.extend(2 for i in indices_used if i > n_cbl)
+        groups.extend(2 for i in indices_used if i >= n_cbl)
         colors = [fill_color_cbl for i in indices_used if i < n_cbl]
-        colors.extend(fill_color_ctx for i in indices_used if i > n_cbl)
+        colors.extend(fill_color_ctx for i in indices_used if i >= n_cbl)
         borders = ['#aba7c4' for _ in indices_used]
 
         my_graph = nx.Graph()
@@ -54,24 +53,24 @@ def main():
         weights = []
         for i in indices:
             if i[0] < n_cbl:
-                first = 'Cbl{}'.format(i[0])
+                first = 'Cbl{}'.format(i[0]+1)
             else:
-                first = 'Ctx{}'.format(i[0] - n_cbl)
+                first = 'Ctx{}'.format(i[0]+1 - n_cbl)
             if i[1] < n_cbl:
-                second = 'Cbl{}'.format(i[1])
+                second = 'Cbl{}'.format(i[1]+1)
             else:
-                second = 'Ctx{}'.format(i[1] - n_cbl)
+                second = 'Ctx{}'.format(i[1]+1 - n_cbl)
             index_named.append((first, second))
-        if first[:3] == first[:3]:
-            weights.append(int(m[i[0], i[1]]))
-        else:
-            weights.append(int(0))
+            if first[:3] == second[:3]:
+                weights.append(int(m[i[0], i[1]]))
+            else:
+                weights.append(0)
         for index in index_named:
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
-
-        nx.write_gml(my_graph, '/home/romano/mep/ContinuousGlobalSynchrony/Graphs/{}_same_only.gml'.format(filename[:-4]))
+        print(filename)
+        nx.write_gml(my_graph, '/home/romano/mep/ContinuousGlobalSynchrony/Graphs/{}_same.gml'.format(filename[:-4]))
 
 
 main()
