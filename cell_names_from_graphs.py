@@ -33,12 +33,35 @@ def get_names_from_edge(filepath, source, target):
 loc = '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/'
 target = '/home/romano/Documents/ContinuousGlobalSynchrony/Indices/'
 files = os.popen(f'ls {loc}').read().split('\n')[:-1]
-print(files)
 for my_file in files:
+    if 'same' in my_file or 'cross' in my_file:
+        continue
     l = get_edges(loc + my_file)
     pairs_of_names = [get_names_from_edge(loc + my_file, *i) for i in l]
-    with open(target + my_file[:-3] + 'csv', 'w') as f:
-        for pair in pairs_of_names:
-            f.write(f'{pair[0]},{pair[1]}\n')
-
+    cbl_cbl = set()
+    ctx_ctx = set()
+    cross_cbl = set()
+    cross_ctx = set()
+    for first, sec in pairs_of_names:
+        if first[:3] == 'Cbl' and sec[:3] == 'Cbl':
+            cbl_cbl.add(int(first[3:]))
+            cbl_cbl.add(int(sec[3:]))
+        if first[:3] == 'Cbl' and sec[:3] == 'Ctx':
+            cross_cbl.add(int(first[3:]))
+            cross_ctx.add(int(sec[3:]))
+        if first[:3] == 'Ctx' and sec[:3] == 'Cbl':
+            cross_ctx.add(int(first[3:]))
+            cross_cbl.add(int(sec[3:]))
+        if first[:3] == 'Ctx' and sec[:3] == 'Ctx':
+            ctx_ctx.add(int(first[3:]))
+            ctx_ctx.add(int(sec[3:]))
+    with open(target + my_file[:-4] + '_cblcbl.csv', 'w') as f:
+        for i in sorted(list(cbl_cbl)):
+            f.write(f'{i}\n')
+    with open(target + my_file[:-4] + '_ctxctx.csv', 'w') as f:
+        for i in sorted(list(ctx_ctx)):
+            f.write(f'{i}\n')
+    with open(target + my_file[:-4] + '_cross.csv', 'w') as f:
+        for i, j in zip(sorted(list(cross_cbl)), sorted(list(cross_ctx))):
+            f.write(f'{i},{j}\n')
         
