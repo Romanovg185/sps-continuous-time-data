@@ -274,182 +274,182 @@ graph [
   ]
   node [
     id 39
-    label "Ctx2"
-    group 2
-    fill "#634289"
+    label "Cbl171"
+    group 1
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 40
-    label "Ctx10"
-    group 2
-    fill "#634289"
+    label "Cbl179"
+    group 1
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 41
-    label "Ctx11"
-    group 2
-    fill "#634289"
+    label "Cbl180"
+    group 1
+    fill "#872a0e"
     border "#aba7c4"
   ]
   node [
     id 42
-    label "Ctx27"
+    label "Ctx13"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 43
-    label "Ctx33"
+    label "Ctx19"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 44
-    label "Ctx39"
+    label "Ctx25"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 45
-    label "Ctx40"
+    label "Ctx26"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 46
-    label "Ctx41"
+    label "Ctx27"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 47
-    label "Ctx54"
+    label "Ctx40"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 48
-    label "Ctx57"
+    label "Ctx43"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 49
-    label "Ctx59"
+    label "Ctx45"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 50
-    label "Ctx69"
+    label "Ctx55"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 51
-    label "Ctx75"
+    label "Ctx61"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 52
-    label "Ctx80"
+    label "Ctx66"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 53
-    label "Ctx94"
+    label "Ctx80"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 54
-    label "Ctx101"
+    label "Ctx87"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 55
-    label "Ctx107"
+    label "Ctx93"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 56
-    label "Ctx109"
+    label "Ctx95"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 57
-    label "Ctx114"
+    label "Ctx100"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 58
-    label "Ctx121"
+    label "Ctx107"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 59
-    label "Ctx128"
+    label "Ctx114"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 60
-    label "Ctx130"
+    label "Ctx116"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 61
-    label "Ctx131"
+    label "Ctx117"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 62
-    label "Ctx133"
+    label "Ctx119"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 63
-    label "Ctx136"
+    label "Ctx122"
     group 2
     fill "#634289"
     border "#aba7c4"
   ]
   node [
     id 64
-    label "Ctx140"
+    label "Ctx126"
     group 2
     fill "#634289"
     border "#aba7c4"

@@ -5,7 +5,7 @@ import networkx as nx
 
 def main():
     l = os.popen("ls FourBoxRawData").read().split('\n')
-    l = ["/home/romano/mep/ContinuousGlobalSynchrony/FourBoxRawData/" + i for i in l[:-1]]
+    l = ["/home/romano/Documents/ContinuousGlobalSynchrony/FourBoxRawData/" + i for i in l[:-1]]
     fill_color_cbl = "#872a0e"
     fill_color_ctx = "#634289"
     threshold = 5
@@ -49,6 +49,31 @@ def main():
         nx.set_node_attributes(my_graph, fill_dict, "fill")
         nx.set_node_attributes(my_graph, border_dict, "border")
 
+        # Normal graph write
+        index_named = []
+        weights = []
+        for i in indices:
+            if i[0] < n_cbl:
+                first = 'Cbl{}'.format(i[0]+1)
+            else:
+                first = 'Ctx{}'.format(i[0]+1 - n_cbl)
+            if i[1] < n_cbl:
+                second = 'Cbl{}'.format(i[1]+1)
+            else:
+                second = 'Ctx{}'.format(i[1]+1 - n_cbl)
+            index_named.append((first, second))
+            weights.append(int(m[i[0], i[1]]))
+            #if first[:3] != second[:3]:
+            #    weights.append(int(m[i[0], i[1]]))
+            #else:
+            #    weights.append(0)
+        for index in index_named:
+            my_graph.add_edge(index[0], index[1])
+        weight_dict = dict(zip(index_named, weights))
+        nx.set_edge_attributes(my_graph, weight_dict, "value")
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}.gml'.format(filename[6:-4]))
+
+        # Same region graph write
         index_named = []
         weights = []
         for i in indices:
@@ -69,8 +94,29 @@ def main():
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
-        print(filename)
-        nx.write_gml(my_graph, '/home/romano/mep/ContinuousGlobalSynchrony/Graphs/{}_same.gml'.format(filename[:-4]))
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_same.gml'.format(filename[6:-4]))
 
+        # Cross region graph write
+        index_named = []
+        weights = []
+        for i in indices:
+            if i[0] < n_cbl:
+                first = 'Cbl{}'.format(i[0]+1)
+            else:
+                first = 'Ctx{}'.format(i[0]+1 - n_cbl)
+            if i[1] < n_cbl:
+                second = 'Cbl{}'.format(i[1]+1)
+            else:
+                second = 'Ctx{}'.format(i[1]+1 - n_cbl)
+            index_named.append((first, second))
+            if first[:3] != second[:3]:
+                weights.append(int(m[i[0], i[1]]))
+            else:
+                weights.append(0)
+        for index in index_named:
+            my_graph.add_edge(index[0], index[1])
+        weight_dict = dict(zip(index_named, weights))
+        nx.set_edge_attributes(my_graph, weight_dict, "value")
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_cross.gml'.format(filename[6:-4]))
 
 main()

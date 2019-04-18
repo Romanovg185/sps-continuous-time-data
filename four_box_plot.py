@@ -11,7 +11,6 @@ A neuron (column/row) is filtered out if there is no other neuron with which it 
 """
 def correlation_score_matrix_above_threshold(path_ctx, threshold=0):
     is_plotting_autocorrelation = False
-    is_logarithmic_color_map = False
     
     partaking_neurons_per_event_scope1 = np.loadtxt('/home/romano/Documents/ContinuousGlobalSynchrony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx).replace("ctx", "cbl"), delimiter=',')    
     partaking_neurons_per_event_scope2 = np.loadtxt('/home/romano/Documents/ContinuousGlobalSynchrony/SynchronousEventParticipatingNeurons/{}'.format(path_ctx), delimiter=',')    
@@ -19,6 +18,7 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=0):
     print(total_partaking.shape)
     n_scope_1 = partaking_neurons_per_event_scope1.shape[0]
     
+    size_cbl = partaking_neurons_per_event_scope1.shape[0]
     size = partaking_neurons_per_event_scope1.shape[0] + partaking_neurons_per_event_scope2.shape[0]
     ratio = n_scope_1/size
     correlation_score = np.zeros((size, size))
@@ -29,16 +29,8 @@ def correlation_score_matrix_above_threshold(path_ctx, threshold=0):
             if events_shared >= threshold:
                 if is_plotting_autocorrelation or i != j:
                     correlation_score[i, j] = events_shared
-    if is_logarithmic_color_map:
-        correlation_score = np.log(correlation_score)
-        current_cmap = cm.get_cmap()
-        current_cmap.set_bad(color='black')
     
-    sum_of_correlations = np.sum(correlation_score[:n_scope_1], axis=1)
-    scope1_valid = np.sum(sum_of_correlations > 0) # Number of true columns in the cerebellum
-    print(correlation_score.shape)
-    #correlation_score = correlation_score[~np.all(correlation_score == 0, axis=1)]
-    #correlation_score = correlation_score[:, ~np.all(correlation_score == 0, axis=0)]
+    scope1_valid = size_cbl # Number of true columns in the cerebellum
 
     # Writing
     z_top = np.hstack([correlation_score[:scope1_valid, :scope1_valid], np.full((scope1_valid, 1), np.nan), correlation_score[:scope1_valid, scope1_valid:]])
