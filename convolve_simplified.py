@@ -125,11 +125,14 @@ def find_participants_both(is_thresholding=False):
         # Splitting cortex and cerebellum
         part_cbl = participators[:m_cbl.shape[1], :]
         part_ctx = participators[m_cbl.shape[1]:, :]
-        np.savetxt('cbl_participating_neurons' + file_name_cortex[11:], part_cbl, delimiter=',')
-        np.savetxt('ctx_participating_neurons' + file_name_cortex[11:], part_ctx, delimiter=',')
-        np.savetxt('intervals_significant_correlation' + file_name_cortex[11:], np.array(i), delimiter=',')
+        np.savetxt('SynchronousEventParticipatingNeurons/cbl_' + file_name_cortex[11:], part_cbl, delimiter=',')
+        np.savetxt('SynchronousEventParticipatingNeurons/ctx_' + file_name_cortex[11:], part_ctx, delimiter=',')
+        np.savetxt('IntervalsSignificantCorrelation/' + file_name_cortex[11:], np.array(i), delimiter=',')
 
-def convolve_and_write():
+"""
+Writes the kernel sum for both cbl and ctx to file
+"""
+def write_kernel_sum():
     files = os.popen('ls FRIOnsetTimes').read().split('\n')[:-1]
     files = list({i[3:] for i in files})
     cortex_files = ['ctx' + i for i in files]
@@ -160,7 +163,8 @@ def convolve_and_write():
             y[i, :] = np.convolve(y[i, :], kernel, mode='same')
             print('{}/{}'.format(i+1, m.shape[1]))
         z = np.sum(y, axis=0)
-        np.savetxt('total_kernel_sum' + file_name_cortex[11:], z, delimiter=',')
+        np.savetxt('TotalKernelSums/' + file_name_cortex[11:], z, delimiter=',')
 
 if __name__ == "__main__":
     find_participants_both()
+    write_kernel_sum()
