@@ -110,6 +110,7 @@ def find_participants_both(is_thresholding=False):
     cortex_files = ['ctx' + i for i in files]
     cerebellum_files = ['cbl' + i for i in files]
     for file_name_cerebellum, file_name_cortex in zip(cerebellum_files, cortex_files):
+        print(file_name_cerebellum)
         m_cbl = np.loadtxt('FRIOnsetTimes/' + file_name_cerebellum, delimiter=',') # [event, cell]
         m_ctx = np.loadtxt('FRIOnsetTimes/' + file_name_cortex, delimiter=',')
         while m_cbl.shape[0] < m_ctx.shape[0]:
@@ -125,8 +126,8 @@ def find_participants_both(is_thresholding=False):
         # Splitting cortex and cerebellum
         part_cbl = participators[:m_cbl.shape[1], :]
         part_ctx = participators[m_cbl.shape[1]:, :]
-        np.savetxt('SynchronousEventParticipatingNeurons/cbl_' + file_name_cortex[11:], part_cbl, delimiter=',')
-        np.savetxt('SynchronousEventParticipatingNeurons/ctx_' + file_name_cortex[11:], part_ctx, delimiter=',')
+        np.savetxt('SynchronousEventParticipatingNeurons/cbl' + file_name_cortex[11:], part_cbl, delimiter=',')
+        np.savetxt('SynchronousEventParticipatingNeurons/ctx' + file_name_cortex[11:], part_ctx, delimiter=',')
         np.savetxt('IntervalsSignificantCorrelation/' + file_name_cortex[11:], np.array(i), delimiter=',')
 
 """
@@ -163,8 +164,8 @@ def write_kernel_sum():
             y[i, :] = np.convolve(y[i, :], kernel, mode='same')
             print('{}/{}'.format(i+1, m.shape[1]))
         z = np.sum(y, axis=0)
-        np.savetxt('TotalKernelSums/' + file_name_cortex[11:], z, delimiter=',')
+        np.savetxt('TotalKernelSums/' + file_name_cortex[12:], z, delimiter=',')
 
 if __name__ == "__main__":
-    find_participants_both()
+    #find_participants_both()
     write_kernel_sum()

@@ -65,8 +65,9 @@ def export_four_box_plots():
 
         m = correlation_score[scope1_valid:, scope1_valid:]
         axes[1, 1].imshow(m, aspect='auto')
-        plt.savefig('four_box_plot' + file_name_cerebellum[24:-3] + 'eps')
-        np.savetxt('four_box_data' + file_name_cerebellum[24:], z_tot, delimiter=',')
+        print(file_name_cerebellum)
+        plt.savefig('FourBoxPlots/' + file_name_cerebellum[4:-3] + 'eps')
+        np.savetxt('FourBoxRawData/' + file_name_cerebellum[4:], z_tot, delimiter=',')
 
 if __name__ == "__main__":
     export_four_box_plots()

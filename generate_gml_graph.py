@@ -16,7 +16,8 @@ def main():
         m_cblcbl = m[:n_cbl, :n_cbl]
         m_cblctx = m[n_cbl+1:, :n_cbl]
         m_ctxctx = m[n_cbl+1:, n_cbl+1:]
-        filename = path[73:-4] + ".gml"
+        filename = path[64:-4] + ".gml"
+        print(filename)
         # Fixing matrices
         m = np.zeros((m.shape[0] - 1, m.shape[1] - 1))
         m[:n_cbl, :n_cbl] = m_cblcbl
@@ -71,7 +72,7 @@ def main():
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
-        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}.gml'.format(filename[6:-4]))
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}.gml'.format(filename[:-4]))
 
         # Same region graph write
         index_named = []
@@ -94,7 +95,7 @@ def main():
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
-        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_same.gml'.format(filename[6:-4]))
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_same.gml'.format(filename[:-4]))
 
         # Cross region graph write
         index_named = []
@@ -117,6 +118,6 @@ def main():
             my_graph.add_edge(index[0], index[1])
         weight_dict = dict(zip(index_named, weights))
         nx.set_edge_attributes(my_graph, weight_dict, "value")
-        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_cross.gml'.format(filename[6:-4]))
+        nx.write_gml(my_graph, '/home/romano/Documents/ContinuousGlobalSynchrony/Graphs/{}_cross.gml'.format(filename[:-4]))
 
 main()
