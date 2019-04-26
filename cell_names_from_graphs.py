@@ -55,6 +55,15 @@ for my_file in files:
         if first[:3] == 'Ctx' and sec[:3] == 'Ctx':
             ctx_ctx.add(int(first[3:]))
             ctx_ctx.add(int(sec[3:]))
+    print(my_file)
+    print(cross_cbl)
+    print(cross_ctx)
+    cross_ctx = list(cross_ctx)
+    cross_cbl = list(cross_cbl)
+    while len(cross_ctx) < len(cross_cbl):
+        cross_ctx.append(999999)
+    while len(cross_cbl) < len(cross_ctx):
+        cross_cbl.append(999999)
     with open(target + my_file[:-4] + '_cblcbl.csv', 'w') as f:
         for i in sorted(list(cbl_cbl)):
             f.write(f'{i}\n')
@@ -62,6 +71,8 @@ for my_file in files:
         for i in sorted(list(ctx_ctx)):
             f.write(f'{i}\n')
     with open(target + my_file[:-4] + '_cross.csv', 'w') as f:
-        for i, j in zip(sorted(list(cross_cbl)), sorted(list(cross_ctx))):
-            f.write(f'{i},{j}\n')
+        for i, j in zip(sorted(cross_cbl), sorted(cross_ctx)):
+            istar = i if i != 999999 else ' '
+            jstar = j if j != 999999 else ' '
+            f.write(f'{istar},{jstar}\n')
         
