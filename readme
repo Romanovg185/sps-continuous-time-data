@@ -1,6 +1,5 @@
 Figures:
 EPS of 4-box plots.
-The individual EPS are scaled individually, so unable to compare color hues.
 Cerebellum and cortex are placed on individual boxes.
 
 FRIOnsetTimes:
@@ -18,3 +17,7 @@ Rows represent cells.
 A 1 is placed if this cell fires in the corresponding synchronous event.
 The absolute time intervals in seconds are stored in IntervalsSignificantCorrelation
 
+Selection criterion:
+In order to select an interval of significant correlation, a ground truth is used. This ground truth is formed individually for M Cbl cells and N Ctx cells. To do this, we randomly sample a Cbl cell N times, shuffle it in time and let this be the new onset times. We do similar for Ctx. Then, the kernel sum for these are computed and added to form kernel_sum_surrogate. The threshold for an event is mean(kernel_sum_surrogate) + 2*std(kernel_sum_surrogate).
+All cells inside an interval of significant correlation are considered to partake in this event.
+To form the graph, a manual threshold of minimum number of correlation events a cell has to partake in has to be set. This also determines the indices.

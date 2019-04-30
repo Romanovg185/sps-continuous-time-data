@@ -7,6 +7,6 @@ if __name__ == '__main__':
     find_participants_both()
     write_kernel_sum()
     export_four_box_plots()
-    make_graphs()
     threshold_for_considering_correlation = 5
-    export_indices_correlating_cells(threshold_for_considering_correlation)
+    make_graphs(threshold_for_considering_correlation)
+    export_indices_correlating_cells()
